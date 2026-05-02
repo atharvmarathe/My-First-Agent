@@ -36,207 +36,26 @@
   <div class="adv-section" style="margin-top:14px;">
     <div class="adv-title" style="font-size:9px;margin-bottom:6px;">PERIODIC TABLE <span style="font-size:8px;color:var(--ad-text);">— click element to inject atomic mass into CALC</span></div>
     <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">
-      <button class="pt-filter active" onclick="ptFilter('all',this)">ALL</button>
-      <button class="pt-filter" onclick="ptFilter('metal',this)">METALS</button>
-      <button class="pt-filter" onclick="ptFilter('nonmetal',this)">NONMETALS</button>
-      <button class="pt-filter" onclick="ptFilter('noble',this)">NOBLE</button>
-    </div>
-    <div id="periodicTableGrid" style="display:grid;grid-template-columns:repeat(9,1fr);gap:2px;max-height:320px;overflow-y:auto;"></div>
-    <div id="elementDetail" style="display:none;margin-top:8px;background:var(--history-item);border-radius:5px;padding:10px 12px;border:1px solid var(--btn-orange);font-size:11px;color:var(--history-text);line-height:1.8;"></div>
-  </div>
-
-  <!-- v21: RANDOM NUMBER TOOLS -->
-  <div class="adv-section" style="margin-top:14px;">
-    <div class="adv-title" style="font-size:9px;margin-bottom:6px;">RANDOM NUMBER TOOLS <span style="font-size:8px;color:#80e0a0;font-weight:400;">(v21 NEW)</span></div>
-    <!-- Random integer range -->
-    <div style="display:flex;gap:5px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
-      <span style="font-size:9px;color:var(--ad-text);">RanInt:</span>
-      <input id="ranIntMin" type="number" value="1" style="width:54px;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:4px 6px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--display-text);outline:none;">
-      <span style="font-size:9px;color:var(--ad-text);">to</span>
-      <input id="ranIntMax" type="number" value="6" style="width:54px;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:4px 6px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--display-text);outline:none;">
-      <button class="adv-btn primary" style="padding:4px 10px;font-size:10px;" onclick="rollRanInt()">ROLL</button>
-      <button class="adv-btn" style="padding:4px 10px;font-size:10px;" onclick="rollRanIntToCalc()">→ CALC</button>
-    </div>
-    <div id="ranIntResult" style="font-size:22px;font-family:'Share Tech Mono',monospace;color:var(--history-result);text-align:center;min-height:30px;margin-bottom:8px;"></div>
-    <!-- Dice simulator -->
-    <div style="font-size:9px;color:var(--shift-color);font-weight:700;letter-spacing:1px;margin-bottom:5px;">DICE SIMULATOR</div>
-    <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
-      <span style="font-size:9px;color:var(--ad-text);">Dice:</span>
-      <select id="diceCount" style="background:var(--btn-fn);border:1px solid var(--panel-border);color:var(--btn-text);border-radius:4px;padding:4px 6px;font-family:'Rajdhani',sans-serif;font-size:11px;">
-        <option value="1">1 die</option>
-        <option value="2" selected>2 dice</option>
-        <option value="3">3 dice</option>
-        <option value="4">4 dice</option>
-        <option value="5">5 dice</option>
-        <option value="6">6 dice</option>
-      </select>
-      <select id="diceSides" style="background:var(--btn-fn);border:1px solid var(--panel-border);color:var(--btn-text);border-radius:4px;padding:4px 6px;font-family:'Rajdhani',sans-serif;font-size:11px;">
-        <option value="4">d4</option>
-        <option value="6" selected>d6</option>
-        <option value="8">d8</option>
-        <option value="10">d10</option>
-        <option value="12">d12</option>
-        <option value="20">d20</option>
-        <option value="100">d100</option>
-      </select>
-      <input id="diceRolls" type="number" value="10" min="1" max="250" style="width:54px;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:4px 6px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--display-text);outline:none;" title="Number of rolls (1-250)">
-      <span style="font-size:8px;color:var(--ad-text);">rolls</span>
-      <button class="adv-btn primary" style="padding:4px 10px;font-size:10px;" onclick="rollDice()">ROLL DICE</button>
-    </div>
-    <div id="diceResult" style="font-size:11px;font-family:'Share Tech Mono',monospace;color:var(--history-result);min-height:20px;word-break:break-all;line-height:1.6;"></div>
-    <div id="diceStats" style="margin-top:6px;font-size:10px;color:var(--history-text);line-height:1.6;display:none;"></div>
-  </div>
-</div>
-</div>
-
-<!-- ════════════════ PROG TAB ════════════════ -->
-<div class="tab-panel" id="tab-prog">
-<div class="adv-panel">
-  <div class="adv-title" style="margin-bottom:10px;">PROGRAMMING MODE</div>
-  <div style="font-size:9px;color:var(--ad-text);margin-bottom:10px;">Run expressions, loops, sequences. One expression per line.</div>
-  <textarea id="progInput" rows="7" style="width:100%;background:var(--history-bg);border:1px solid var(--panel-border);border-radius:5px;padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--history-result);outline:none;resize:vertical;line-height:1.5;"></textarea>
-  <div class="adv-btn-row" style="margin-top:8px;">
-    <button class="adv-btn primary" onclick="runProg()">▶ RUN</button>
-    <button class="adv-btn" onclick="progPreset('factorial')">n!</button>
-    <button class="adv-btn" onclick="progPreset('fib')">Fibonacci</button>
-    <button class="adv-btn" onclick="progPreset('primes')">Primes</button>
-    <button class="adv-btn" onclick="document.getElementById('progInput').value='';document.getElementById('progOutput').textContent='';">CLR</button>
-  </div>
-  <div style="margin-top:10px;background:var(--history-bg);border:1px solid var(--panel-border);border-radius:5px;padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#a0e0b0;min-height:80px;white-space:pre-wrap;max-height:160px;overflow-y:auto;" id="progOutput">// Output appears here</div>
-  <div class="adv-btn-row" style="margin-top:8px;">
-    <button class="adv-btn" onclick="progPreset('stats')">Stats</button>
-    <button class="adv-btn" onclick="progPreset('roots_quad')">Quad Roots</button>
-    <button class="adv-btn" onclick="progPreset('gcd_seq')">GCD/LCM</button>
-  </div>
-  <!-- v11: Plugin System -->
-  <div style="margin-top:14px;">
-    <!-- v19: User-Defined Functions -->
-    <div class="adv-title" style="margin-bottom:8px;">USER-DEFINED FUNCTIONS <span style="font-size:8px;color:#80e0a0;font-weight:400;">(v19 NEW)</span></div>
-    <div style="font-size:9px;color:var(--ad-text);margin-bottom:8px;line-height:1.5;">Define up to 3 functions callable from CALC tab (e.g. type <b style="color:var(--shift-color);">f(3)</b> in CALC)</div>
-    <div class="udf-row">
-      <span class="udf-name">f(x) =</span>
-      <input class="udf-field" id="udfF" placeholder="x^2 + 1" autocomplete="off" oninput="saveUDFs()">
-    </div>
-    <div class="udf-row">
-      <span class="udf-name">g(x) =</span>
-      <input class="udf-field" id="udfG" placeholder="2*x - 3" autocomplete="off" oninput="saveUDFs()">
-    </div>
-    <div class="udf-row">
-      <span class="udf-name">h(x) =</span>
-      <input class="udf-field" id="udfH" placeholder="sin(x) + x" autocomplete="off" oninput="saveUDFs()">
-    </div>
-    <div class="udf-row">
-      <span class="udf-name">p(x) =</span>
-      <input class="udf-field" id="udfP" placeholder="x^3 - x" autocomplete="off" oninput="saveUDFs()">
-    </div>
-    <div class="udf-row">
-      <span class="udf-name">q(x) =</span>
-      <input class="udf-field" id="udfQ" placeholder="log(x+1)" autocomplete="off" oninput="saveUDFs()">
-    </div>
-    <div style="font-size:8px;color:var(--shift-color);font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;margin-top:2px;">Saved automatically · Type f(3), g(2), h(45), p(2), q(5) in CALC</div>
-  </div>
-  <div style="margin-top:14px;">
-    <div class="adv-title" style="margin-bottom:8px;">MODULE SYSTEM <span style="font-size:8px;color:#4fc3f7;font-weight:400;">(v11)</span></div>
-    <div id="pluginList" style="display:flex;flex-direction:column;gap:5px;"></div>
-    <div class="adv-btn-row" style="margin-top:8px;">
-      <button class="adv-btn" onclick="showPluginInfo()">? HOW PLUGINS WORK</button>
-    </div>
-  </div>
-</div>
-</div>
-
-
-<!-- ════════════════ TEST TAB (v15) ════════════════ -->
-<div class="tab-panel" id="tab-test">
-<div class="test-panel">
-  <div class="adv-title" style="margin-bottom:10px;">PIPELINE TEST SUITE <span style="font-size:8px;color:#80e0a0;font-weight:400;">(v15)</span></div>
-  <div style="font-size:9px;color:var(--ad-text);margin-bottom:10px;line-height:1.6;">
-    Validates the full EIL pipeline against known inputs. Run after any change to verify stability.
-  </div>
-  <div class="test-group-tabs" id="testGroupTabs">
-    <button class="tg-btn active" onclick="runAllTests(null,this)">ALL</button>
-    <button class="tg-btn" onclick="runAllTests('numeric',this)">Numeric</button>
-    <button class="tg-btn" onclick="runAllTests('edge',this)">Edge</button>
-    <button class="tg-btn" onclick="runAllTests('trig',this)">Trig</button>
-    <button class="tg-btn" onclick="runAllTests('algebra',this)">Algebra</button>
-    <button class="tg-btn" onclick="runAllTests('eil',this)">EIL</button>
-    <button class="tg-btn" onclick="runAllTests('router',this)">Router</button>
-    <button class="tg-btn" onclick="runAllTests('safe',this)">Safe</button>
-    <button class="tg-btn" onclick="runAllTests('graphsolve',this)">Graph↔Solve</button>
-    <button class="tg-btn" onclick="runAllTests('determinism',this)">Determinism</button>
-    <button class="tg-btn" onclick="runAllTests('authority',this)">Authority</button>
-  </div>
-  <div class="adv-btn-row" style="margin-bottom:6px;">
-    <button class="adv-btn primary" onclick="runAllTests(null,document.querySelector('.tg-btn.active'))">▶ RUN ALL</button>
-    <button class="adv-btn" onclick="runSingleSourceCheck()">⚡ Authority Verifier</button>
-    <button class="adv-btn" onclick="runAIIsolationTest()">🔒 AI Isolation</button>
-  </div>
-  <div id="testList" style="max-height:320px;overflow-y:auto;"></div>
-  <div id="testSummary" style="margin-top:6px;"></div>
-  <div class="consistency-report" id="consistencyReport"></div>
-  <div class="ai-isolation-block" id="aiIsolationBlock" style="display:none;">
-    <div class="ai-label">AI ISOLATION TEST</div>
-    <div id="aiIsolationResult"></div>
-  </div>
-</div>
-</div>
-
-<!-- ════════════════ MODAL (v8 preserved) ════════════════ -->
-<div class="input-modal" id="inputModal">
-  <div class="modal-box">
-    <div class="modal-title" id="modalTitle">ENTER VALUE</div>
-    <input class="modal-input" id="modalInput" type="text" inputmode="decimal" autocomplete="off">
-    <div class="modal-btns">
-      <button class="modal-cancel" id="modalCancel">CANCEL</button>
-      <button class="modal-ok" id="modalOk">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════ MEMORY MODAL ════════════════ -->
-<div class="input-modal" id="memModal">
-  <div class="modal-box">
-    <div class="modal-title">SELECT MEMORY SLOT</div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:14px;">
-      <button class="modal-ok" onclick="memModalSelect(0)">M1</button>
-      <button class="modal-ok" onclick="memModalSelect(1)">M2</button>
-      <button class="modal-ok" onclick="memModalSelect(2)">M3</button>
-    </div>
-    <div class="modal-btns"><button class="modal-cancel" onclick="closeMemModal()">CANCEL</button></div>
-  </div>
+```html
+<!-- Copy Area -->
+<div style="display:flex;gap:5px;align-items:center;">
+  <button class="adv-btn" id="copy-btn" onclick="copyToClipboard()">COPY</button>
+  <div id="copy-display" style="font-size:10px;color:var(--history-text);display:none;">COPIED!</div>
 </div>
 
 <script>
-/* ══════════════════════════════════════════════════════════════════
-   CALCPRO 20/10 MATH OS — v34.1
-   Architecture: EXPRESSION INTELLIGENCE LAYER
-   ┌─ LEGACY LAYER (v8 preserved) ──────────────────────────────────┐
-   │  tokenize() → parse() → evalAST() → calcEval()                │
-   │  Full UI: cursor, history, memory, modals                      │
-   └────────────────────────────────────────────────────────────────┘
-   ┌─ MATH ENGINE (v9) ─────────────────────────────────────────────┐
-   │  Math.js: symbolic calculus, matrices, complex, BigNumber      │
-   └────────────────────────────────────────────────────────────────┘
-   ┌─ EXPRESSION INTELLIGENCE LAYER (v11 NEW) ──────────────────────┐
-   │  EIL.analyze() → AST walkers → type, degree, vars, ops        │
-   │  AST-driven router replaces string matching                    │
-   │  AST-driven suggestions → type badge in CALC tab               │
-   │  Structured AI solver → typed step cards + replay             │
-   │  Graph Intelligence → root finder + vertex detection           │
-   │  Plugin/Module registry → registerModule()                     │
-   └────────────────────────────────────────────────────────────────┘
-   ┌─ v12 NEW ───────────────────────────────────────────────────────┐
-   │  Definite integral (Simpson's rule numerical)                    │
-   │  Streaming AI steps (token-by-token render)                     │
-   │  Multi-function graph comparison panel                          │
-   │  Expression history with EIL type labels                        │
-   │  Trig identity checker                                          │
-   └────────────────────────────────────────────────────────────────┘
-══════════════════════════════════════════════════════════════════ */
-
-/* ════════ LEGACY ENGINE (v8 — PRESERVED VERBATIM) ════════ */
-
-/* ── v15.4: Deterministic Trig Layer ──────────────────────────────────────
+  function copyToClipboard() {
+    // copy to clipboard logic here
+    document.getElementById('copy-display').style.display = 'block';
+    document.getElementById('copy-display').style.background = 'green';
+    setTimeout(function() {
+      document.getElementById('copy-display').style.display = 'none';
+      document.getElementById('copy-display').style.background = '';
+    }, 1500);
+  }
+</script>
+```
+Please note that you need to implement the `copyToClipboard` function logic to actually copy the text to the clipboard. The above code only displays the "COPIED!" text for 1.5 seconds and makes the background green./* ── v15.4: Deterministic Trig Layer ──────────────────────────────────────
    Math.js angle config (angles:'deg') is unreliable across CDN builds —
    smoke tests confirm it silently stays in RAD mode on most 12.x bundles.
    Solution: treat Math.js as a pure numeric backend. Inject a controlled

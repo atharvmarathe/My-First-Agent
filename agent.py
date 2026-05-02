@@ -71,6 +71,18 @@ def browse_web(url):
     except:
         return "Could not fetch URL"
 
+def break_into_steps(task):
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{
+            "role": "user",
+            "content": f"""Break this task into 3-5 small steps for editing an 18000 line HTML calculator file.
+Return ONLY a numbered list, nothing else.
+Task: {task}"""
+        }]
+    )
+    return response.choices[0].message.content
+
 calc_lines = read_calculator_full()
 total_lines = len(calc_lines)
 messages = load_memory()
@@ -83,10 +95,17 @@ while True:
     if user_input.lower() == "quit":
         break
 
-    # Smart section loading
+    if len(user_input) > 50:
+        print("Breaking into steps...")
+        steps = break_into_steps(user_input)
+        print(f"Plan:\n{steps}\n")
+        confirm = input("Proceed? (y/n): ")
+        if confirm.lower() != 'y':
+            continue
+
     keyword = None
     chunk_num = 0
-    
+
     if user_input.lower().startswith("chunk "):
         chunk_num = int(user_input.split()[1])
         calc_chunk, start_line = get_chunk(calc_lines, chunk_num=chunk_num)
@@ -94,9 +113,8 @@ while True:
         keyword = user_input.split(" ", 1)[1]
         calc_chunk, start_line = get_chunk(calc_lines, keyword=keyword)
     else:
-        # Auto-detect keyword from user input
         words = user_input.lower().split()
-        keywords = ["copy", "graph", "formula", "step", "api", "button", 
+        keywords = ["copy", "graph", "formula", "step", "api", "button",
                    "modal", "share", "history", "theme", "css", "style",
                    "function", "calc", "solve", "photo", "camera"]
         for word in words:

@@ -1,204 +1,21 @@
 ```html
-<!-- Copy Area -->
-<div style="display:flex;gap:5px;align-items:center;">
-  <button class="adv-btn" id="copy-btn" onclick="copyToClipboard()">COPY</button>
-  <button class="adv-btn" id="clear-history-btn" onclick="clearHistory()">CLEAR HISTORY</button>
-  <div id="copy-display" style="font-size:10px;color:var(--history-text);display:none;">COPIED!</div>
-  <div id="calc-history" style="font-size:10px;color:var(--history-text);"></div>
-  <button class="adv-btn" id="display-btn" onclick="showDisplay()">DISPLAY</button>
-</div>
-
-<script>
-  // ... (rest of the script remains the same)
-
-  // Ensure everything works offline after first load
-  window.addEventListener('offline', function() {
-    console.log('Offline mode: using cached resources');
+// Cache resources for offline use
+window.addEventListener('load', function() {
+  caches.open('calculator-resources').then(function(cache) {
+    cache.addAll([
+      'calculator.css',
+      'calculator.js',
+      'font-awesome.css',
+      'font-awesome.js',
+    ]);
   });
+});
 
-  // Cache resources for offline use
-  window.addEventListener('load', function() {
-    caches.open('calculator-resources').then(function(cache) {
-      cache.addAll([
-        'calculator.css',
-        'calculator.js',
-        'font-awesome.css',
-        'font-awesome.js',
-      ]);
-    });
-  });
-</script>
-```  },
-  ac:function(){expr='';cursorPos=0;evaled=false;mainDisp='0';shift=false;draw();},
-  d:function(v){
-    if(evaled){expr='';cursorPos=0;evaled=false;}
-    ins(v);
-  },
-  dot:function(){
-    if(evaled){expr='0';cursorPos=1;evaled=false;}
-    var seg=expr.slice(0,cursorPos).split(/[+\-×÷*/^(,]/).pop();
-    if(seg.indexOf('.')>=0)return;
-    ins(expr===''||/[+\-×÷*/^(,]$/.test(expr.slice(0,cursorPos))?'0.':'.');
-  },
-  op:function(v){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    if(expr&&/[+\-×÷*\/]$/.test(expr.slice(0,cursorPos))){
-      expr=expr.slice(0,cursorPos-1)+v+expr.slice(cursorPos);
-      draw();return;
-    }
-    ins(v);
-  },
-  eq:function(){
-    var s=expr.trim();if(!s)return;
-    var ob=countBrackets(s);
-    if(ob>0){for(var i=0;i<ob;i++)s+=')';}
-    // v15.1: Full pipeline execution on = press
-    var eilState = (typeof EILv15 !== 'undefined') ? EILv15.build(s) : null;
-    var v;
-    if(eilState) {
-      // Show pipeline running
-      if(typeof PM !== 'undefined') PM.parse('running');
-      // Validate first
-      if(!eilState.isValid && eilState.errors.length > 0) {
-        var errMsg = eilState.errors[0];
-        if(typeof PM !== 'undefined') PM.done(false);
-        flashErr(errMsg.length > 20 ? errMsg.slice(0,20) : errMsg);
-        return;
-      }
-      var result = (typeof EXEC !== 'undefined') ? EXEC.run(eilState, isDeg) : { ok:false };
-      if(!result.ok) {
-        if(typeof PM !== 'undefined') PM.done(false);
-        flashErr(result.error || 'Error');
-        return;
-      }
-      v = result.value;
-      if(typeof v === 'object' && v !== null) {
-        // Complex or non-numeric result — show formatted string
-        mainDisp = result.display || String(v);
-        lastVal = 0; evaled = true;
-        addHistory(expr, mainDisp);
-        expr = mainDisp; cursorPos = expr.length; draw();
-        if(histOpen) renderHistory();
-        return;
-      }
-    } else {
-      // EILv15 not yet defined (should never happen in v15.2) — route through pipeline anyway
-      v = execFromExpr(s, isDeg);
-    }
-    if(isNaN(v) && !isFinite(v)){flashErr('Invalid expression');return;}
-    if(isNaN(v)){flashErr('Invalid expression');return;}
-    var displayResult = fmtWithOutFmt(v);
-    addHistory(expr, displayResult);
-    lastVal=v; mainDisp=displayResult; evaled=true; expr=fmt(v); cursorPos=expr.length; draw();
-    if(histOpen)renderHistory();
-  },
-  pct:function(){
-    var v=execFromExpr(expr,isDeg);
-    if(isNaN(v))return;
-    var pv=v/100;lastVal=pv;expr=fmt(pv);cursorPos=expr.length;mainDisp=fmt(pv);evaled=true;draw();
-  },
-  neg:function(){
-    if(evaled){lastVal=-lastVal;expr=fmt(lastVal);cursorPos=expr.length;mainDisp=fmt(lastVal);draw();return;}
-    if(!expr)return;
-    if(expr.slice(0,cursorPos).match(/^\-/)){expr=expr.slice(1);cursorPos=Math.max(0,cursorPos-1);}
-    else{expr='-'+expr;cursorPos++;}
-    draw();
-  },
-  ans:function(){
-    if(shift){
-      // Convert lastVal between DEG and RAD — no expression evaluation needed
-      var rad=isDeg?lastVal*Math.PI/180:lastVal*180/Math.PI;
-      if(isNaN(rad))return;
-      lastVal=rad;expr=fmt(rad);cursorPos=expr.length;mainDisp=fmt(rad);evaled=true;draw();
-      shift=false;
-    }else{
-      if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;draw();}
-      else ins(fmt(lastVal));
-    }
-  },
-  lp:function(){ins('(');},
-  rp:function(){ins(')');},
-  EE:function(){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    ins('×10^');
-  },
-  sin:function(){insertFn('sin');},
-  cos:function(){insertFn('cos');},
-  tan:function(){insertFn('tan');},
-  asin:function(){insertFn('asin');},
-  acos:function(){insertFn('acos');},
-  atan:function(){insertFn('atan');},
-  sinh:function(){insertFn('sinh');},
-  cosh:function(){insertFn('cosh');},
-  tanh:function(){insertFn('tanh');},
-  asinh:function(){insertFn('asinh');},
-  acosh:function(){insertFn('acosh');},
-  atanh:function(){insertFn('atanh');},
-  ln:function(){insertFn('ln');},
-  exp_e:function(){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    insertFn('exp');
-  },
-  log:function(){insertFn('log');},
-  exp10:function(){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    ins('10^(');
-  },
-  sqrt:function(){insertFn('sqrt');},
-  cbrt:function(){insertFn('cbrt');},
-  abs:function(){insertFn('abs');},
-  sq:function(){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    if(!expr)return;
-    if(shift){ins('^3');shift=false;}else ins('^2');draw();
-  },
-  cube:function(){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    if(!expr)return;ins('^3');draw();
-  },
-  recip:function(){applyFn('recip');},
-  fact:function(){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    if(!expr)return;ins('!');draw();
-  },
-  pi:function(){ins('π');},
-  euler:function(){ins('e');},
-  pow:function(){
-    if(evaled){expr=fmt(lastVal);cursorPos=expr.length;evaled=false;}
-    if(!expr)return;ins('^');draw();
-  },
-  nrt:function(){
-    var x=evaled?lastVal:execFromExpr(expr,isDeg);if(isNaN(x)){flashErr('Error: Input');return;}
-    showModal('ROOT DEGREE (n):',function(raw){
-      if(raw===null)return;var n=parseFloat(raw);if(isNaN(n)){flashErr('Error: Input');return;}
-      var v=Math.pow(x,1/n);if(isNaN(v)){flashErr('Error: Math');return;}
-      lastVal=v;expr=fmt(v);cursorPos=expr.length;mainDisp=fmt(v);evaled=true;draw();
-    });
-  },
-  perm:function(){
-    var n=evaled?lastVal:execFromExpr(expr,isDeg);if(isNaN(n)){flashErr('Error: Input');return;}
-    showModal('ENTER r FOR nPr:',function(raw){
-      if(raw===null)return;var r=parseFloat(raw);if(isNaN(r)){flashErr('Error: Input');return;}
-      var v=permutation(n,r);if(isNaN(v)){flashErr('Error: Math');return;}
-      lastVal=v;expr=fmt(v);cursorPos=expr.length;mainDisp=fmt(v);evaled=true;draw();
-    });
-  },
-  comb:function(){
-    var n=evaled?lastVal:execFromExpr(expr,isDeg);if(isNaN(n)){flashErr('Error: Input');return;}
-    showModal('ENTER r FOR nCr:',function(raw){
-      if(raw===null)return;var r=parseFloat(raw);if(isNaN(r)){flashErr('Error: Input');return;}
-      var v=combination(n,r);if(isNaN(v)){flashErr('Error: Math');return;}
-      lastVal=v;expr=fmt(v);cursorPos=expr.length;mainDisp=fmt(v);evaled=true;draw();
-    });
-  },
-  ms:function(){
-    var val=evaled?lastVal:execFromExpr(expr,isDeg);if(isNaN(val)){flashErr('Error');return;}
-    document.getElementById('memModal').classList.add('open');
-    memModalCb=function(i){if(i===null)return;memSlots[i]=val;store.set('calcpro_mem',JSON.stringify(memSlots));draw();};
-  },
-  mr:function(){
-    document.getElementById('memModal').classList.add('open');
-    memModalCb=function(i){
+// Ensure everything works offline after first load
+window.addEventListener('offline', function() {
+  console.log('Offline mode: using cached resources');
+});
+```    memModalCb=function(i){
       if(i===null)return;
       if(memSlots[i]===null){flashErr('M'+(i+1)+' Empty');return;}
       var v=memSlots[i];

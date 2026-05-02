@@ -40,7 +40,13 @@
 <!-- Copy Area -->
 <div style="display:flex;gap:5px;align-items:center;">
   <button class="adv-btn" id="copy-btn" onclick="copyToClipboard()">COPY</button>
+```html
+<!-- Copy Area -->
+<div style="display:flex;gap:5px;align-items:center;">
+  <button class="adv-btn" id="copy-btn" onclick="copyToClipboard()">COPY</button>
+  <button class="adv-btn" id="clear-history-btn" onclick="clearHistory()">CLEAR HISTORY</button>
   <div id="copy-display" style="font-size:10px;color:var(--history-text);display:none;">COPIED!</div>
+  <div id="calc-history" style="font-size:10px;color:var(--history-text);"></div>
 </div>
 
 <script>
@@ -53,194 +59,36 @@
       document.getElementById('copy-display').style.background = '';
     }, 1500);
   }
+
+  function clearHistory() {
+    store.del('calc-history');
+    updateHistoryDisplay();
+  }
+
+  function updateHistoryDisplay() {
+    var history = store.get('calc-history');
+    if (history) {
+      document.getElementById('calc-history').innerText = history;
+    } else {
+      document.getElementById('calc-history').innerText = '';
+    }
+  }
+
+  function saveToHistory(calculation) {
+    var history = store.get('calc-history');
+    if (history) {
+      history += '\n' + calculation;
+    } else {
+      history = calculation;
+    }
+    store.set('calc-history', history);
+    updateHistoryDisplay();
+  }
+
+  // Call updateHistoryDisplay on page load
+  updateHistoryDisplay();
 </script>
-```
-Please note that you need to implement the `copyToClipboard` function logic to actually copy the text to the clipboard. The above code only displays the "COPIED!" text for 1.5 seconds and makes the background green./* ── v15.4: Deterministic Trig Layer ──────────────────────────────────────
-   Math.js angle config (angles:'deg') is unreliable across CDN builds —
-   smoke tests confirm it silently stays in RAD mode on most 12.x bundles.
-   Solution: treat Math.js as a pure numeric backend. Inject a controlled
-   trig scope at call time. No library config. No silent degradation.
-   Engine mode is always known and logged. Zero ambiguity.                 */
-
-/* Runtime engine mode — readable from console or debug UI */
-var _engineMode = 'UNKNOWN'; // set during init below
-
-/* Trig scope factories — these are the sole authority for angle behavior */
-var _TRIG = (function() {
-  var D = Math.PI / 180;
-  return {
-    /* DEG scope: inject degree-aware trig into every Math.js evaluate() call */
-    degScope: function(base) {
-      var sc = Object.assign({}, base || {});
-      sc.sin   = function(x) { return Math.sin(x * D); };
-      sc.cos   = function(x) { return Math.cos(x * D); };
-      sc.tan   = function(x) { var v = Math.tan(x * D); return Math.abs(v) > 1e14 ? NaN : v; };
-      sc.asin  = function(x) { return Math.asin(x) / D; };
-      sc.acos  = function(x) { return Math.acos(x) / D; };
-      sc.atan  = function(x) { return Math.atan(x) / D; };
-      sc.atan2 = function(y, x) { return Math.atan2(y, x) / D; };
-      /* Hyperbolic functions are NOT angle functions — pass through untouched */
-      sc.sinh  = Math.sinh;  sc.cosh  = Math.cosh;  sc.tanh  = Math.tanh;
-      sc.asinh = Math.asinh; sc.acosh = Math.acosh; sc.atanh = Math.atanh;
-      return sc;
-    },
-    /* RAD scope: trig pass-through — Math.js defaults are already radians */
-    radScope: function(base) {
-      return Object.assign({}, base || {});
-    },
-    /* v22: GRAD scope: 1 grad = 0.9 degrees = π/200 radians */
-    gradScope: function(base) {
-      var G = Math.PI / 200;
-      var sc = Object.assign({}, base || {});
-      sc.sin   = function(x) { return Math.sin(x * G); };
-      sc.cos   = function(x) { return Math.cos(x * G); };
-      sc.tan   = function(x) { var v = Math.tan(x * G); return Math.abs(v) > 1e14 ? NaN : v; };
-      sc.asin  = function(x) { return Math.asin(x) / G; };
-      sc.acos  = function(x) { return Math.acos(x) / G; };
-      sc.atan  = function(x) { return Math.atan(x) / G; };
-      sc.atan2 = function(y, x) { return Math.atan2(y, x) / G; };
-      sc.sinh  = Math.sinh;  sc.cosh  = Math.cosh;  sc.tanh  = Math.tanh;
-      sc.asinh = Math.asinh; sc.acosh = Math.acosh; sc.atanh = Math.atanh;
-      return sc;
-    },
-    /* Smoke test: verify sin(90) returns 1 using degScope */
-    verify: function() {
-      var sc = _TRIG.degScope({});
-      return Math.abs(sc.sin(90) - 1) < 1e-12;
-    }
-  };
-})();
-
-/* Unified evaluator — the single path for all numeric computation.
-   Math.js handles everything EXCEPT angle mode, which we own entirely. */
-function mathEvalWithMode(exprStr, degMode, scope) {
-  if (typeof math === 'undefined') throw new Error('[CalcPro] Math.js not loaded');
-  var s = (exprStr || '')
-    .replace(/×/g, '*')
-    .replace(/÷/g, '/')
-    .replace(/π/g, 'pi')
-    .replace(/\bmod\b/g, ' mod ');
-  /* v22: Build scope based on angleMode (deg/rad/grad) */
-  var sc;
-  if (angleMode === 'grad') {
-    sc = _TRIG.gradScope(scope);
-  } else if (degMode) {
-    sc = _TRIG.degScope(scope);
-  } else {
-    sc = _TRIG.radScope(scope);
-  }
-  return math.evaluate(s, sc);
-}
-
-/* Init: verify trig layer, set engine mode */
-_engineMode = _TRIG.verify() ? 'CONTROLLED_DEG_SCOPE' : 'ERROR';
-if (_engineMode === 'ERROR') {
-  console.error('[v15.4] TRIG layer self-verify failed — this should never happen');
-} else {
-  console.log('[v15.4] Engine mode:', _engineMode, '— Math.js angle config bypassed, scope injection active');
-}
-
-var store = {
-  get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
-  set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}},
-  del:function(k){try{localStorage.removeItem(k);}catch(e){}}
-};
-
-var TK={NUM:'NUM',IDENT:'IDENT',PLUS:'+',MINUS:'-',STAR:'*',SLASH:'/',
-        CARET:'^',BANG:'!',LPAREN:'(',RPAREN:')',COMMA:',',EOF:'EOF'};
-
-function tokenize(src){
-  var tokens=[],i=0,len=src.length;
-  while(i<len){
-    var c=src[i];
-    if(/\s/.test(c)){i++;continue;}
-    if(/[0-9]/.test(c)||(c==='.'&&i+1<len&&/[0-9]/.test(src[i+1]))){
-      var s='';
-      while(i<len&&/[0-9.]/.test(src[i]))s+=src[i++];
-      if(i<len&&(src[i]==='e'||src[i]==='E')&&i+1<len&&/[0-9+\-]/.test(src[i+1])){
-        s+=src[i++];
-        if(i<len&&(src[i]==='+'||src[i]==='-'))s+=src[i++];
-        while(i<len&&/[0-9]/.test(src[i]))s+=src[i++];
-      }
-      tokens.push({type:TK.NUM,value:parseFloat(s)});continue;
-    }
-    if(c==='e'){
-      var pOk=i===0||!/[a-zA-Z0-9_]/.test(src[i-1]);
-      var nOk=i+1>=len||!/[a-zA-Z0-9_]/.test(src[i+1]);
-      if(pOk&&nOk){tokens.push({type:TK.IDENT,name:'E'});i++;continue;}
-    }
-    if(/[a-zA-Z_]/.test(c)){
-      var s='';
-      while(i<len&&/[a-zA-Z0-9_]/.test(src[i]))s+=src[i++];
-      tokens.push({type:TK.IDENT,name:s});continue;
-    }
-    if(c==='×'){
-      if(src[i+1]==='1'&&src[i+2]==='0'&&src[i+3]==='^'){
-        tokens.push({type:TK.STAR});tokens.push({type:TK.NUM,value:10});tokens.push({type:TK.CARET});i+=4;continue;
-      }
-      tokens.push({type:TK.STAR});i++;continue;
-    }
-    if(c==='÷'){tokens.push({type:TK.SLASH});i++;continue;}
-    if(c==='−'){tokens.push({type:TK.MINUS});i++;continue;}
-    if(c==='π'){tokens.push({type:TK.IDENT,name:'pi'});i++;continue;}
-    var single={'+':TK.PLUS,'-':TK.MINUS,'*':TK.STAR,'/':TK.SLASH,
-                '^':TK.CARET,'!':TK.BANG,'(':TK.LPAREN,')':TK.RPAREN,',':TK.COMMA};
-    if(single[c]){tokens.push({type:single[c]});i++;continue;}
-    i++;
-  }
-  var FN={sin:1,cos:1,tan:1,asin:1,acos:1,atan:1,sinh:1,cosh:1,tanh:1,
-          asinh:1,acosh:1,atanh:1,ln:1,log:1,log10:1,log2:1,sqrt:1,cbrt:1,
-          abs:1,exp:1,fact:1,pow:1,ceil:1,floor:1,round:1,max:1,min:1};
-  var CN={pi:1,PI:1,E:1};
-  var out=[];
-  for(var j=0;j<tokens.length;j++){
-    out.push(tokens[j]);
-    if(j+1>=tokens.length)continue;
-    var cur=tokens[j],nxt=tokens[j+1],mul=false;
-    if(cur.type===TK.NUM){
-      if(nxt.type===TK.IDENT||nxt.type===TK.LPAREN)mul=true;
-    }else if(cur.type===TK.RPAREN){
-      if(nxt.type===TK.LPAREN||nxt.type===TK.IDENT)mul=true;
-    }else if(cur.type===TK.IDENT){
-      var ic=CN[cur.name]||!FN[cur.name?cur.name.toLowerCase():''];
-      if(ic&&(nxt.type===TK.LPAREN||nxt.type===TK.IDENT))mul=true;
-    }else if(cur.type===TK.BANG){
-      if(nxt.type===TK.LPAREN||nxt.type===TK.IDENT||nxt.type===TK.NUM)mul=true;
-    }
-    if(mul)out.push({type:TK.STAR});
-  }
-  out.push({type:TK.EOF});
-  return out;
-}
-
-function parse(tokens){
-  var pos=0;
-  function peek(){return tokens[pos];}
-  function check(t){return tokens[pos].type===t;}
-  function consume(t){
-    var tok=tokens[pos];
-    if(t&&tok.type!==t)throw new Error('Expected '+t);
-    pos++;return tok;
-  }
-  function parseExpr(){return parseAdd();}
-  function parseAdd(){
-    var l=parseMul();
-    while(check(TK.PLUS)||check(TK.MINUS)){
-      var op=consume().type;l={type:'binop',op:op,left:l,right:parseMul()};
-    }
-    return l;
-  }
-  function parseMul(){
-    var l=parsePow();
-    while(check(TK.STAR)||check(TK.SLASH)){
-      var op=consume().type;l={type:'binop',op:op,left:l,right:parsePow()};
-    }
-    return l;
-  }
-  function parsePow(){
-    var b=parsePostfix();
-    if(check(TK.CARET)){consume(TK.CARET);return{type:'binop',op:TK.CARET,left:b,right:parsePow()};}
-    return b;
+```    return b;
   }
   function parsePostfix(){
     var n=parseUnary();

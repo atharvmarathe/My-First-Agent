@@ -83,6 +83,23 @@ Task: {task}"""
     )
     return response.choices[0].message.content
 
+def test_calculator():
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.goto(f"file:///{os.path.abspath(CALC_FILE)}")
+            page.wait_for_timeout(2000)
+            errors = page.evaluate("() => window.__errors || []")
+            title = page.title()
+            browser.close()
+            if errors:
+                return f"ERRORS FOUND: {errors}"
+            return f"Calculator loaded OK: {title}"
+    except Exception as e:
+        return f"Test failed: {e}"
+
 calc_lines = read_calculator_full()
 total_lines = len(calc_lines)
 messages = load_memory()
@@ -151,15 +168,19 @@ Otherwise respond normally."""
         new_code = reply.replace("WRITE_CHUNK:", "").strip()
         write_chunk(calc_lines, new_code, start_line, CHUNK_SIZE)
         calc_lines = read_calculator_full()
+        test_result = test_calculator()
+        print(f"Browser test: {test_result}")
         auto_commit(f"agent: {user_input[:50]}")
-        reply = f"Done! Updated section around line {start_line} and pushed to GitHub!"
+        reply = f"Done! Updated section around line {start_line}. Test: {test_result}"
 
     elif reply.startswith("WRITE_FILE:"):
         new_code = reply.replace("WRITE_FILE:", "").strip()
         write_calculator(new_code)
         calc_lines = read_calculator_full()
+        test_result = test_calculator()
+        print(f"Browser test: {test_result}")
         auto_commit(f"agent: {user_input[:50]}")
-        reply = "Done! Full file updated and pushed to GitHub!"
+        reply = f"Done! Full file updated. Test: {test_result}"
 
     elif reply.startswith("BROWSE:"):
         url = reply.replace("BROWSE:", "").strip()

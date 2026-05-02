@@ -94,5 +94,13 @@
   {
     "role": "assistant",
     "content": "Done! Updated section around line 38 and pushed to GitHub!"
+  },
+  {
+    "role": "user",
+    "content": "dd a persistent calculation history that saves to local storage survives page refresh, with a clear history button"
+  },
+  {
+    "role": "assistant",
+    "content": "Done! Updated section around line 42 and pushed to GitHub!"
   }
 ]

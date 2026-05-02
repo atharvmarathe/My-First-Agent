@@ -1,46 +1,4 @@
 ```html
-<div class="eq-input-group"><span class="eq-label" style="min-width:20px;font-size:8px;">a₂</span><input class="eq-field" id="eqS2a" type="number" value="1"><span class="eq-label" style="min-width:20px;font-size:8px;">b₂</span><input class="eq-field" id="eqS2b2" type="number" value="3"><span class="eq-label" style="min-width:20px;font-size:8px;">c₂</span><input class="eq-field" id="eqS2c" type="number" value="13"></div>
-```<div class="tab-panel" id="tab-science">
-<div class="adv-panel">
-  <div class="adv-title" style="margin-bottom:8px;">SCIENCE TOOLS <span style="font-size:8px;color:#80e0a0;font-weight:400;">(v18)</span></div>
-
-    <!-- v28: Physical Constants Browser — searchable, 48 constants, tap to insert -->
-  <div class="adv-section" id="constBrowserSection" style="margin-bottom:14px;">
-    <div class="adv-title" style="margin-bottom:8px;">PHYSICAL CONSTANTS BROWSER <span style="font-size:8px;color:#f080d0;font-weight:400;">(v28 NEW)</span></div>
-    <div style="font-size:9px;color:var(--ad-text);margin-bottom:8px;">Tap any constant to insert its value into CALC.</div>
-    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
-      <input id="constSearch" class="adv-input" placeholder="Search constants..." style="flex:1;margin-bottom:0;font-size:12px;" oninput="renderConstantsList()" autocomplete="off" spellcheck="false">
-    </div>
-    <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;">
-      <select id="constCatSel" style="background:var(--btn-fn);border:1px solid var(--panel-border);color:var(--btn-text);border-radius:4px;padding:5px 7px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;" onchange="renderConstantsList()">
-        <option value="all">ALL CATEGORIES</option>
-        <option value="fundamental">Fundamental</option>
-        <option value="atomic">Atomic</option>
-        <option value="thermo">Thermodynamic</option>
-        <option value="gravity">Gravitational</option>
-        <option value="em">Electromagnetic</option>
-        <option value="math">Math</option>
-        <option value="chem">Chemistry</option>
-      </select>
-    </div>
-    <div id="constList" style="max-height:320px;overflow-y:auto;"></div>
-  </div>
-
-<!-- Physical Constants -->
-  <div class="adv-section">
-    <div class="adv-title" style="font-size:9px;">PHYSICAL CONSTANTS</div>
-    <div id="constGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-top:6px;"></div>
-  </div>
-
-  <!-- Periodic Table -->
-  <div class="adv-section" style="margin-top:14px;">
-    <div class="adv-title" style="font-size:9px;margin-bottom:6px;">PERIODIC TABLE <span style="font-size:8px;color:var(--ad-text);">— click element to inject atomic mass into CALC</span></div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">
-```html
-<!-- Copy Area -->
-<div style="display:flex;gap:5px;align-items:center;">
-  <button class="adv-btn" id="copy-btn" onclick="copyToClipboard()">COPY</button>
-```html
 <!-- Copy Area -->
 <div style="display:flex;gap:5px;align-items:center;">
   <button class="adv-btn" id="copy-btn" onclick="copyToClipboard()">COPY</button>
@@ -61,12 +19,12 @@
   }
 
   function clearHistory() {
-    store.del('calc-history');
+    localStorage.removeItem('calc-history');
     updateHistoryDisplay();
   }
 
   function updateHistoryDisplay() {
-    var history = store.get('calc-history');
+    var history = localStorage.getItem('calc-history');
     if (history) {
       document.getElementById('calc-history').innerText = history;
     } else {
@@ -75,130 +33,20 @@
   }
 
   function saveToHistory(calculation) {
-    var history = store.get('calc-history');
+    var history = localStorage.getItem('calc-history');
     if (history) {
       history += '\n' + calculation;
     } else {
       history = calculation;
     }
-    store.set('calc-history', history);
+    localStorage.setItem('calc-history', history);
     updateHistoryDisplay();
   }
 
   // Call updateHistoryDisplay on page load
   updateHistoryDisplay();
 </script>
-```    return b;
-  }
-  function parsePostfix(){
-    var n=parseUnary();
-    while(check(TK.BANG)){consume(TK.BANG);n={type:'unary',op:'!',operand:n};}
-    return n;
-  }
-  function parseUnary(){
-    if(check(TK.MINUS)){consume(TK.MINUS);return{type:'unary',op:'-',operand:parseUnary()};}
-    if(check(TK.PLUS)){consume(TK.PLUS);return parseUnary();}
-    return parsePrimary();
-  }
-  function parsePrimary(){
-    var t=peek();
-    if(t.type===TK.NUM){consume(TK.NUM);return{type:'num',value:t.value};}
-    if(t.type===TK.IDENT){
-      consume(TK.IDENT);
-      if(t.name==='pi'||t.name==='PI')return{type:'num',value:Math.PI};
-      if(t.name==='E')return{type:'num',value:Math.E};
-      if(check(TK.LPAREN)){
-        consume(TK.LPAREN);
-        var args=[];
-        if(!check(TK.RPAREN)){
-          args.push(parseExpr());
-          while(check(TK.COMMA)){consume(TK.COMMA);args.push(parseExpr());}
-        }
-        if(check(TK.RPAREN))consume(TK.RPAREN);
-        return{type:'call',name:t.name,args:args};
-      }
-      return{type:'num',value:NaN};
-    }
-    if(t.type===TK.LPAREN){
-      consume(TK.LPAREN);var inner=parseExpr();
-      if(check(TK.RPAREN))consume(TK.RPAREN);return inner;
-    }
-    throw new Error('Unexpected: '+t.type);
-  }
-  try{return parseExpr();}catch(e){return null;}
-}
-
-function evalAST(node,deg){
-  if(!node)return NaN;
-  var M=Math;
-  /* v22: Support grad mode in legacy AST — deg param is true for DEG, false for RAD,
-     but we also check global angleMode for GRAD */
-  var isGrad = (typeof angleMode !== 'undefined' && angleMode === 'grad');
-  var ang=function(x){
-    if(isGrad) return x*M.PI/200;
-    return deg?x*M.PI/180:x;
-  };
-  var td=function(x){
-    if(isGrad) return x*200/M.PI;
-    return x*180/M.PI;
-  };
-  switch(node.type){
-    case 'num':return node.value;
-    case 'binop':{
-      var l=evalAST(node.left,deg),r=evalAST(node.right,deg);
-      switch(node.op){
-        case TK.PLUS:return l+r;case TK.MINUS:return l-r;
-        case TK.STAR:return l*r;
-        case TK.SLASH:return r===0?(l===0?NaN:(l>0?Infinity:-Infinity)):l/r;
-        case TK.CARET:return M.pow(l,r);
-      }return NaN;
-    }
-    case 'unary':
-      if(node.op==='-')return -evalAST(node.operand,deg);
-      if(node.op==='!')return factorial(evalAST(node.operand,deg));
-      return NaN;
-    case 'call':{
-      var nm=node.name.toLowerCase();
-      var a=node.args.map(function(n){return evalAST(n,deg);});
-      var x=a[0];
-      switch(nm){
-        case 'sin':return M.sin(ang(x));
-        case 'cos':return M.cos(ang(x));
-        case 'tan':{var v=M.tan(ang(x));return M.abs(v)>1e14?NaN:v;}
-        case 'asin':return deg?td(M.asin(x)):M.asin(x);
-        case 'acos':return deg?td(M.acos(x)):M.acos(x);
-        case 'atan':return deg?td(M.atan(x)):M.atan(x);
-        case 'sinh':return M.sinh(x);case 'cosh':return M.cosh(x);case 'tanh':return M.tanh(x);
-        case 'asinh':return M.asinh(x);case 'acosh':return M.acosh(x);case 'atanh':return M.atanh(x);
-        case 'ln':return M.log(x);
-        case 'log':case 'log10':return M.log10(x);
-        case 'log2':return M.log2(x);
-        case 'sqrt':return M.sqrt(x);
-        case 'cbrt':return M.cbrt(x);
-        case 'abs':return M.abs(x);
-        case 'exp':return M.exp(x);
-        case 'ceil':return M.ceil(x);
-        case 'floor':return M.floor(x);
-        case 'round':return a.length>1?M.round(x*M.pow(10,a[1]))/M.pow(10,a[1]):M.round(x);
-        case 'max':return M.max.apply(null,a);
-        case 'min':return M.min.apply(null,a);
-        case 'pow':return a.length>1?M.pow(x,a[1]):NaN;
-        case 'mod':return a.length>1?x%a[1]:NaN;
-        case 'gcd':return a.length>1?gcd(M.round(x),M.round(a[1])):NaN;
-        case 'lcm':return a.length>1?lcm(M.round(x),M.round(a[1])):NaN;
-        case 'fact':return factorial(x);
-        case 'recip':return x===0?NaN:1/x;
-        case 'nrt':return a.length>1?M.pow(x,1/a[1]):NaN;
-        case 'perm':return a.length>1?permutation(x,a[1]):NaN;
-        case 'comb':return a.length>1?combination(x,a[1]):NaN;
-      }
-      return NaN;
-    }
-  }
-  return NaN;
-}
-
-function factorial(n){
+```function factorial(n){
   n=Math.round(n);
   if(n<0||n>170)return NaN;
   var r=1;for(var i=2;i<=n;i++)r*=i;return r;

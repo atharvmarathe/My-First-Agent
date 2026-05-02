@@ -174,5 +174,13 @@
   {
     "role": "assistant",
     "content": "Done! Updated section around line 0. Test: Test failed: No module named 'playwright'"
+  },
+  {
+    "role": "user",
+    "content": "COMPETITIVE INTELLIGENCE \u2014 ALREADY RESEARCHED"
+  },
+  {
+    "role": "assistant",
+    "content": "Done! Updated section around line 0. Test: Test failed: No module named 'playwright'"
   }
 ]

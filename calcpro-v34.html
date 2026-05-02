@@ -5,6 +5,7 @@
   <button class="adv-btn" id="clear-history-btn" onclick="clearHistory()">CLEAR HISTORY</button>
   <div id="copy-display" style="font-size:10px;color:var(--history-text);display:none;">COPIED!</div>
   <div id="calc-history" style="font-size:10px;color:var(--history-text);"></div>
+  <button class="adv-btn" id="display-btn" onclick="showDisplay()">DISPLAY</button>
 </div>
 
 <script>
@@ -43,162 +44,19 @@
     updateHistoryDisplay();
   }
 
+  function showDisplay() {
+    document.getElementById('copy-display').style.display = 'block';
+    document.getElementById('copy-display').style.background = 'green';
+    setTimeout(function() {
+      document.getElementById('copy-display').style.display = 'none';
+      document.getElementById('copy-display').style.background = '';
+    }, 1500);
+  }
+
   // Call updateHistoryDisplay on page load
   updateHistoryDisplay();
 </script>
-```window.renderConstantsList = function(filter) {
-  var list = document.getElementById('constList');
-  if (!list) return;
-  var cat = document.getElementById('constCatSel') ? document.getElementById('constCatSel').value : 'all';
-  var search = (document.getElementById('constSearch') ? document.getElementById('constSearch').value : '').toLowerCase();
-  list.innerHTML = '';
-  PHYS_CONSTANTS_V28.forEach(function(c) {
-    if (cat !== 'all' && c.cat !== cat) return;
-    if (search && c.name.toLowerCase().indexOf(search) === -1 && c.sym.toLowerCase().indexOf(search) === -1) return;
-    var d = document.createElement('div');
-    d.style.cssText = 'background:var(--formula-item);border-radius:4px;padding:6px 8px;margin-bottom:4px;border:1px solid var(--panel-border);cursor:pointer;display:flex;gap:8px;align-items:center;transition:border-color 0.15s;';
-    d.innerHTML = '<span style="font-size:12px;color:var(--shift-color);font-weight:700;min-width:32px;">' + escHTML(c.sym) + '</span>'
-      + '<span style="flex:1;"><div style="font-size:10px;color:var(--history-text);">' + escHTML(c.name) + '</div>'
-      + '<div style="font-size:9px;font-family:\'Share Tech Mono\',monospace;color:var(--history-result);">' + c.val.toExponential(5) + (c.unit ? ' <span style="color:var(--ad-text);">' + escHTML(c.unit) + '</span>' : '') + '</div></span>';
-    d.addEventListener('mouseenter', function(){ this.style.borderColor='var(--btn-orange)'; });
-    d.addEventListener('mouseleave', function(){ this.style.borderColor='var(--panel-border)'; });
-    d.addEventListener('click', function() {
-      var s = c.val.toPrecision(12).replace(/\.?0+$/, '');
-      lastVal = c.val; expr = s; cursorPos = s.length; mainDisp = s; evaled = true;
-      if (typeof draw === 'function') draw();
-      if (typeof switchTab === 'function') switchTab('calc');
-    });
-    list.appendChild(d);
-  });
-  if (!list.children.length) list.innerHTML = '<div style="font-size:11px;color:var(--ad-text);text-align:center;padding:12px;">No constants found</div>';
-};
-
-
-function regMean(arr) {
-  if (!arr.length) return 0;
-  return arr.reduce(function(a,b){return a+b;},0) / arr.length;
-}
-
-function regLinear(xs, ys) {
-  var n = xs.length;
-  if (n < 2) return null;
-  var mx = regMean(xs), my = regMean(ys);
-  var sxy = 0, sxx = 0, syy = 0;
-  for (var i=0;i<n;i++) {
-    sxy += (xs[i]-mx)*(ys[i]-my);
-    sxx += (xs[i]-mx)*(xs[i]-mx);
-    syy += (ys[i]-my)*(ys[i]-my);
-  }
-  if (sxx === 0) return null;
-  var b = sxy/sxx, a = my - b*mx;
-  var r = (sxx>0&&syy>0) ? sxy/Math.sqrt(sxx*syy) : 0;
-  return { a:a, b:b, r:r, r2:r*r, eq:'y = '+parseFloat(b.toPrecision(6))+'x + '+parseFloat(a.toPrecision(6)) };
-}
-
-function regExp(xs, ys) {
-  /* y = a*e^(bx) → ln(y) = ln(a) + bx — linear regression on (x, ln(y)) */
-  var lys = [];
-  for (var i=0;i<ys.length;i++) {
-    if (ys[i] <= 0) return null;
-    lys.push(Math.log(ys[i]));
-  }
-  var r = regLinear(xs, lys);
-  if (!r) return null;
-  var a = Math.exp(r.a), b = r.b;
-  return { a:a, b:b, r:r.r, r2:r.r2, eq:'y = '+parseFloat(a.toPrecision(5))+'·e^('+parseFloat(b.toPrecision(5))+'x)' };
-}
-
-function regPower(xs, ys) {
-  /* y = a*x^b → ln(y) = ln(a) + b*ln(x) — linear on (ln(x),ln(y)) */
-  var lxs = [], lys = [];
-  for (var i=0;i<xs.length;i++) {
-    if (xs[i] <= 0 || ys[i] <= 0) return null;
-    lxs.push(Math.log(xs[i]));
-    lys.push(Math.log(ys[i]));
-  }
-  var r = regLinear(lxs, lys);
-  if (!r) return null;
-  var a = Math.exp(r.a), b = r.b;
-  return { a:a, b:b, r:r.r, r2:r.r2, eq:'y = '+parseFloat(a.toPrecision(5))+'·x^'+parseFloat(b.toPrecision(5)) };
-}
-
-function regLog(xs, ys) {
-  /* y = a + b*ln(x) */
-  var lxs = [];
-  for (var i=0;i<xs.length;i++) {
-    if (xs[i] <= 0) return null;
-    lxs.push(Math.log(xs[i]));
-  }
-  var r = regLinear(lxs, ys);
-  if (!r) return null;
-  return { a:r.a, b:r.b, r:r.r, r2:r.r2, eq:'y = '+parseFloat(r.b.toPrecision(5))+'·ln(x) + '+parseFloat(r.a.toPrecision(5)) };
-}
-
-function regQuad(xs, ys) {
-  /* y = a + bx + cx² — solve 3×3 normal equations */
-  var n = xs.length;
-  if (n < 3) return null;
-  var s0=n, s1=0, s2=0, s3=0, s4=0, t0=0, t1=0, t2=0;
-  for (var i=0;i<n;i++) {
-    var x=xs[i], y=ys[i];
-    s1+=x; s2+=x*x; s3+=x*x*x; s4+=x*x*x*x;
-    t0+=y; t1+=x*y; t2+=x*x*y;
-  }
-  /* Gaussian elimination */
-  var A = [[s0,s1,s2,t0],[s1,s2,s3,t1],[s2,s3,s4,t2]];
-  for (var col=0;col<3;col++) {
-    var pivot=col;
-    for (var row=col+1;row<3;row++) if(Math.abs(A[row][col])>Math.abs(A[pivot][col]))pivot=row;
-    var tmp=A[col];A[col]=A[pivot];A[pivot]=tmp;
-    if (Math.abs(A[col][col])<1e-15) return null;
-    for (var row2=col+1;row2<3;row2++) {
-      var f=A[row2][col]/A[col][col];
-      for (var k=col;k<=3;k++) A[row2][k]-=f*A[col][k];
-    }
-  }
-  var c=A[2][3]/A[2][2];
-  var b2=(A[1][3]-A[1][2]*c)/A[1][1];
-  var a2=(A[0][3]-A[0][1]*b2-A[0][2]*c)/A[0][0];
-  /* r² via SS_res / SS_tot */
-  var my2=regMean(ys), ssRes=0, ssTot=0;
-  for (var i2=0;i2<n;i2++) {
-    var pred=a2+b2*xs[i2]+c*xs[i2]*xs[i2];
-    ssRes+=(ys[i2]-pred)*(ys[i2]-pred);
-    ssTot+=(ys[i2]-my2)*(ys[i2]-my2);
-  }
-  var r2=(ssTot>0)?1-ssRes/ssTot:1;
-  return { a:a2, b:b2, c:c, r2:r2, eq:'y = '+parseFloat(c.toPrecision(4))+'x² + '+parseFloat(b2.toPrecision(4))+'x + '+parseFloat(a2.toPrecision(4)) };
-}
-
-window.runRegression = function(type) {
-  var _lastRegEqPlot = '';
-  var xs = _regData.xs, ys = _regData.ys;
-  var out = document.getElementById('regResult');
-  var txt = document.getElementById('regResultText');
-  if (!out || !txt) return;
-  if (xs.length < 2) { txt.innerHTML = '<span style="color:var(--btn-del-text);">Need at least 2 data points</span>'; out.classList.add('show'); return; }
-  var res = null;
-  if (type==='linear') res = regLinear(xs,ys);
-  else if (type==='exp') res = regExp(xs,ys);
-  else if (type==='power') res = regPower(xs,ys);
-  else if (type==='log') res = regLog(xs,ys);
-  else if (type==='quad') res = regQuad(xs,ys);
-  else if (type==='sin') res = regSin(xs,ys);
-  if (!res) { txt.innerHTML = '<span style="color:var(--btn-del-text);">Cannot compute (check data signs for exp/power/log; need ≥4 pts for sin)</span>'; out.classList.add('show'); return; }
-  var pf = function(v) { return parseFloat(v.toPrecision(7)); };
-  var html = '<div style="font-size:10px;color:var(--shift-color);font-weight:700;letter-spacing:0.5px;margin-bottom:5px;">'+type.toUpperCase()+' REGRESSION</div>';
-  html += '<div style="font-size:14px;color:var(--history-result);font-family:\'Share Tech Mono\',monospace;margin-bottom:6px;">'+escHTML(res.eq)+'</div>';
-  if (res.r !== undefined) html += '<div class="stat-row"><span class="stat-key">Pearson r</span><span class="stat-val">'+pf(res.r)+'</span></div>';
-  html += '<div class="stat-row"><span class="stat-key">r²</span><span class="stat-val">'+pf(res.r2)+'</span></div>';
-  if (res.a !== undefined && type !== 'quad') html += '<div class="stat-row"><span class="stat-key">'+(type==='linear'?'Intercept (a)':'a')+'</span><span class="stat-val">'+pf(res.a)+'</span></div>';
-  if (res.b !== undefined) html += '<div class="stat-row"><span class="stat-key">'+(type==='linear'?'Slope (b)':'b')+'</span><span class="stat-val">'+pf(res.b)+'</span></div>';
-  if (res.c !== undefined) html += '<div class="stat-row"><span class="stat-key">c (quadratic)</span><span class="stat-val">'+pf(res.c)+'</span></div>';
-  window._v29LastRegEqPlot = (res.eq || '').replace(/^y\s*=\s*/i,'').replace(/·/g,'*');
-  html += '<div style="margin-top:8px;">'
-    + '<button class="adv-btn primary" style="font-size:10px;padding:5px 10px;" '
-    + 'onclick="window._v29SendRegToGraph()">→ GRAPH FIT</button></div>';
-  txt.innerHTML = html;
-  out.classList.add('show');
+```  out.classList.add('show');
 };
 
 window._v29SendRegToGraph = function() {

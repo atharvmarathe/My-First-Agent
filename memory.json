@@ -370,5 +370,13 @@
   {
     "role": "assistant",
     "content": "Done! Updated section around line 0. Test: Calculator loaded OK: "
+  },
+  {
+    "role": "user",
+    "content": "Add an offline step-by-step solver for basic algebra. Before calling the AI API, check if the expression is a simple linear equation like ax+b=c. If yes, solve it locally with rule-based steps without any API call. Show steps like: \"Step 1: subtract 6 from both sides \u2192 2x = -6. Step 2: divide both sides by 2 \u2192 x = -3\". Display in the existing steps output area."
+  },
+  {
+    "role": "assistant",
+    "content": "Done! Updated section around line 124. Test: Calculator loaded OK: "
   }
 ]

@@ -183,207 +183,36 @@ function simplifyLinearEquation(eq) {
   }
 }
 
-// Call the simplifyLinearEquation function when the solve button is clicked
-// (around line 4662, near the selectEqType function)
-function selectEqType(type, btn) {
-  // ... (other code)
-  simplifyLinearEquation(document.getElementById('eq-input').value);
-}
-```
-Note: The above code assumes that the equation is in the format `ax + b = cx + d`, where `a`, `b`, `c`, and `d` are integers. The code uses regular expressions to match the equation and then applies simple algebraic manipulations to solve for `x`. The steps are then displayed in the existing steps output area. If the equation is not in the expected format, the code falls back to calling the AI API.        <span class="ind mem" id="iMem">M</span>
-        <span class="eil-health ok" id="eilHealth" title="EIL Contract Health">EIL✓</span>
-      </div>
-      <button class="theme-btn" id="themeBtn" title="Toggle theme">☀</button>
-      <button class="mode-btn" id="modeBtn" title="Toggle Student/Pro Mode">⚙</button>
-      <button class="theme-btn" id="ocrHeaderBtn" title="📷 Photo Math — point camera at any problem" onclick="(window.v32OpenOCR||window.v30OO||function(){})();" style="background:linear-gradient(135deg,rgba(79,195,247,0.2),rgba(232,98,26,0.15));border-color:rgba(79,195,247,0.5);color:#4fc3f7;font-size:14px;width:30px;height:26px;">📷</button>
-    </div>
-  </div>
-
-  <!-- v15: Live Pipeline Monitor -->
-  <div class="pipeline-monitor" id="pipelineMonitor">
-    <span class="pm-stage idle" id="pmParse"><span class="pm-dot"></span>PARSE</span>
-    <span class="pm-sep">›</span>
-    <span class="pm-stage idle" id="pmEIL"><span class="pm-dot"></span>EIL</span>
-    <span class="pm-sep">›</span>
-    <span class="pm-stage idle" id="pmValidate"><span class="pm-dot"></span>VALID</span>
-    <span class="pm-sep">›</span>
-    <span class="pm-stage idle" id="pmRoute"><span class="pm-dot"></span>ROUTE</span>
-    <span class="pm-sep">›</span>
-    <span class="pm-stage idle" id="pmExec"><span class="pm-dot"></span>EXEC</span>
-    <span style="flex:1"></span>
-    <span id="routerBadge"></span>
-  </div>
-  <!-- v15: Validation error display (non-crashing) -->
-  <div class="validation-block" id="validationBlock">
-    <div class="vb-title">⚠ VALIDATION</div>
-    <span id="validationMsg"></span>
-  </div>
-  <div class="display-wrap">
-    <div class="display" id="display">
-      <div class="display-expr" id="exprLine">
-        <span class="expr-before" id="exprBefore">0</span>
-        <span class="expr-cursor-el"></span>
-        <span class="expr-after" id="exprAfter"></span>
-      </div>
-      <div class="display-main" id="mainLine">0</div>
-      <div class="live-result" id="liveLine"></div>
-      <div class="live-result" id="fracHintLine" style="font-size:10px;color:var(--display-dim);text-align:right;min-height:13px;opacity:0.9;letter-spacing:0.3px;"></div>
-      <div class="bracket-warn" id="bracketWarn"></div>
-      <div class="display-status"><span id="modeLabel">DEG</span><span id="errLabel"></span></div>
-    </div>
-  </div>
-
-  <div class="solar"><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div><div class="sc"></div></div>
-  <!-- v19: Complex Mode Toggle -->
-  <div class="complex-mode-row">
-    <span class="complex-toggle-label">COMPLEX MODE</span>
-    <label class="complex-mode-switch">
-      <input type="checkbox" id="complexModeToggle" onchange="onComplexModeChange(this.checked)">
-      <span class="complex-mode-slider"></span>
-    </label>
-    <span style="font-size:8px;color:var(--ad-text);font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;">i notation active</span>
-  </div>
-  <!-- v19: Complex result bar (shown when complex mode ON and result is complex) -->
-  <div id="complexModeBar">
-    <span class="complex-bar-label">CPLX</span>
-    <span class="complex-bar-val" id="complexBarRectangular">—</span>
-    <span style="font-size:8px;color:var(--ad-text);margin:0 4px;">|</span>
-    <span class="complex-bar-val" id="complexBarPolar">—</span>
-  </div>
-  <div class="sd-btn-row" id="sdBtnRow" style="display:none;">
-    <span id="ndLabel" style="font-size:9px;color:var(--display-dim);font-family:'Share Tech Mono',monospace;flex:1;"></span>
-    <button class="sd-btn" id="sdToggle" onclick="toggleSD()">S⟺D</button>
-  </div>
-  <div class="fmt-bar" id="fmtBar">
-    <button class="fmt-btn active" id="fmt-norm" onclick="setFmt('norm',this)">NORM</button>
-    <button class="fmt-btn" id="fmt-sci" onclick="setFmt('sci',this)">SCI</button>
-    <button class="fmt-btn" id="fmt-eng" onclick="setFmt('eng',this)">ENG</button>
-    <button class="fmt-btn" id="fmt-fix" onclick="setFmt('fix',this)">FIX</button>
-  </div>
-  <!-- v22: Output Format Selector — fraction / mixed / DMS / polar -->
-  <div class="outfmt-bar" id="outfmtBar">
-    <span class="outfmt-label">OUT</span>
-    <button class="outfmt-btn active" id="ofmt-dec" onclick="setOutFmt('dec',this)" title="Decimal">DEC</button>
-    <button class="outfmt-btn" id="ofmt-frac" onclick="setOutFmt('frac',this)" title="Fraction">FRAC</button>
-    <button class="outfmt-btn" id="ofmt-mix" onclick="setOutFmt('mix',this)" title="Mixed Fraction">MIX</button>
-    <button class="outfmt-btn" id="ofmt-dms" onclick="setOutFmt('dms',this)" title="Degrees°Minutes′Seconds″">DMS</button>
-    <button class="outfmt-btn" id="ofmt-pol" onclick="setOutFmt('pol',this)" title="Polar (r∠θ)">POL</button>
-  </div>
-
-  <div class="mem-row" id="memRow">
-    <div class="mem-slot" data-mi="0">M1: —</div>
-    <div class="mem-slot" data-mi="1">M2: —</div>
-    <div class="mem-slot" data-mi="2">M3: —</div>
-  </div>
-
-  <div class="history" id="histPanel">
-    <div class="history-header"><span>HISTORY</span><button class="hist-clear" id="histClear">CLEAR ALL</button></div>
-    <div class="history-inner" id="histList"><div class="hist-empty">No history yet</div></div>
-  </div>
-
-  <!-- v8 button grid (100% preserved) -->
-  <div class="btn-grid" id="btnGrid">
-    <button class="btn orange" data-a="shift"><span class="ml">SHIFT</span></button>
-    <button class="btn mid" data-a="mode"><span class="tl">SETUP</span><span class="ml">MODE</span></button>
-    <button class="btn mid" data-a="hist"><span class="tl">HIST</span><span class="ml">⏱</span></button>
-    <button class="btn del" data-a="bksp"><span class="ml">⌫</span></button>
-    <button class="btn del" data-a="ac"><span class="tl">OFF</span><span class="ml">AC</span></button>
-
-    <button class="btn" data-a="sin" data-s="asin"><span class="tl">sin⁻¹</span><span class="ml">sin</span></button>
-    <button class="btn" data-a="cos" data-s="acos"><span class="tl">cos⁻¹</span><span class="ml">cos</span></button>
-    <button class="btn" data-a="tan" data-s="atan"><span class="tl">tan⁻¹</span><span class="ml">tan</span></button>
-    <button class="btn" data-a="ln"  data-s="exp_e"><span class="tl">eˣ</span><span class="ml">ln</span></button>
-    <button class="btn" data-a="log" data-s="exp10"><span class="tl">10ˣ</span><span class="ml">log</span></button>
-
-    <button class="btn" data-a="sinh" data-s="asinh"><span class="tl">sinh⁻¹</span><span class="ml">sinh</span></button>
-    <button class="btn" data-a="cosh" data-s="acosh"><span class="tl">cosh⁻¹</span><span class="ml">cosh</span></button>
-    <button class="btn" data-a="tanh" data-s="atanh"><span class="tl">tanh⁻¹</span><span class="ml">tanh</span></button>
-    <button class="btn" data-a="sqrt" data-s="cbrt"><span class="tl">∛x</span><span class="ml">√x</span></button>
-    <button class="btn" data-a="sq"   data-s="cube"><span class="tl">x³</span><span class="ml">x²</span></button>
-
-    <button class="btn" data-a="pi"   data-s="euler"><span class="tl">e</span><span class="ml">π</span></button>
-    <button class="btn" data-a="pow"  data-s="nrt"><span class="tl">ⁿ√x</span><span class="ml">xʸ</span></button>
-    <button class="btn" data-a="abs"  data-s="perm"><span class="tl">nPr</span><span class="ml">|x|</span></button>
-    <button class="btn" data-a="fact" data-s="comb"><span class="tl">nCr</span><span class="ml">x!</span></button>
-    <button class="btn" data-a="EE"><span class="tl">ENG</span><span class="ml">EXP</span></button>
-
-    <button class="btn mid" data-a="lp"><span class="ml">(</span></button>
-    <button class="btn mid" data-a="rp"><span class="ml">)</span></button>
-    <button class="btn mid" data-a="ms"><span class="tl">STO</span><span class="ml">M+</span></button>
-    <button class="btn mid" data-a="mr"><span class="tl">RCL</span><span class="ml">MR</span></button>
-    <button class="btn mid" data-a="mc"><span class="tl">CLR</span><span class="ml">MC</span></button>
-
-    <button class="btn num" data-a="d" data-v="7">7</button>
-    <button class="btn num" data-a="d" data-v="8">8</button>
-    <button class="btn num" data-a="d" data-v="9">9</button>
-    <button class="btn op"  data-a="op" data-v="÷"><span class="ml">÷</span></button>
-    <button class="btn mid" data-a="pct"><span class="ml">%</span></button>
-
-    <button class="btn num" data-a="d" data-v="4">4</button>
-    <button class="btn num" data-a="d" data-v="5">5</button>
-    <button class="btn num" data-a="d" data-v="6">6</button>
-    <button class="btn op"  data-a="op" data-v="×"><span class="ml">×</span></button>
-    <button class="btn mid" data-a="ans"><span class="tl">D↔R</span><span class="ml">ANS</span></button>
-
-    <button class="btn num" data-a="d" data-v="1">1</button>
-    <button class="btn num" data-a="d" data-v="2">2</button>
-    <button class="btn num" data-a="d" data-v="3">3</button>
-    <button class="btn op"  data-a="op" data-v="−"><span class="ml">−</span></button>
-    <button class="btn op"  data-a="op" data-v="+"><span class="ml">+</span></button>
-
-    <button class="btn num" data-a="d" data-v="0">0</button>
-    <button class="btn num" data-a="dot"><span class="ml">.</span></button>
-    <button class="btn mid" data-a="neg"><span class="ml">(-)</span></button>
-    <button class="btn mid" data-a="recip"><span class="ml">1/x</span></button>
-    <button class="btn eq"  data-a="eq">=</button>
-  </div>
-
-  <!-- v9 extra row: symbolic math quick-access -->
-  <div class="v9-row" id="v9Row" style="grid-template-columns:repeat(8,1fr);">
-    <button class="btn v9" data-a="v9deriv"><span class="tl">SYMB</span><span class="ml">d/dx</span></button>
-    <button class="btn v9" data-a="v9integ"><span class="tl">SYMB</span><span class="ml">∫dx</span></button>
-    <button class="btn v9" data-a="v9simpl"><span class="tl">MATHJS</span><span class="ml">SIMP</span></button>
-    <button class="btn v9" data-a="v9matrix"><span class="tl">MATRIX</span><span class="ml">MAT</span></button>
-    <button class="btn v9" data-a="v9explain"><span class="tl">AI STEP</span><span class="ml">STEP</span></button>
-    <button class="btn v9" data-a="v9factor"><span class="tl">PRIME</span><span class="ml">FACTOR</span></button>
-    <button class="btn v9" data-a="v9ran"><span class="tl">RANDOM</span><span class="ml">RAN#</span></button>
-    <button class="btn v9" data-a="v9dms"><span class="tl">°′″</span><span class="ml">DMS</span></button>
-  </div>
-  <!-- v34: Feature Quick-Access Bar -->
-  <div id="v34FeatureBar" style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 9px 4px;background:var(--calc-top);border-bottom:1px solid var(--panel-border);">
-    <button onclick="(window.v32OpenOCR||window.v30OO||function(){})();" style="background:linear-gradient(135deg,rgba(79,195,247,0.2),rgba(232,98,26,0.12));border:1px solid rgba(79,195,247,0.45);border-radius:4px;color:#4fc3f7;font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="Photo Math OCR">📷 OCR</button>
-    <button onclick="if(window.v30OC)v30OC();" style="background:rgba(232,98,26,0.1);border:1px solid rgba(232,98,26,0.35);border-radius:4px;color:var(--btn-orange);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="AI Math Tutor">💬 TUTOR</button>
-    <button onclick="if(window.v30GS)v30GS();" style="background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.3);border-radius:4px;color:var(--shift-color);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="Calculation Story Mode">📖 STORY</button>
-    <button onclick="if(window.v30SC)v30SC();" style="background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.3);border-radius:4px;color:var(--shift-color);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="Share Calculation Card">📤 SHARE</button>
-    <button onclick="if(window.switchTab)switchTab('practice');" style="background:rgba(128,224,160,0.1);border:1px solid rgba(128,224,160,0.35);border-radius:4px;color:#80e0a0;font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="Practice Problems">🎓 QUIZ</button>
-    <button onclick="if(window.switchTab)switchTab('physics');" style="background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);border-radius:4px;color:#f0c040;font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="Physics Solver">⚡ PHYS</button>
-    <button onclick="if(window.switchTab)switchTab('chem');" style="background:rgba(240,192,64,0.1);border:1px solid rgba(240,192,64,0.3);border-radius:4px;color:#f0c040;font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="Chemistry Tools">🧪 CHEM</button>
-    <button onclick="if(window.v33TogglePrec)v33TogglePrec();" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:rgba(255,255,255,0.6);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 7px;cursor:pointer;letter-spacing:.5px;" title="Arbitrary Precision Mode (decimal.js)">🔢 PREC</button>
-  </div>
-  <!-- v14 Pipeline stage indicator -->
-  <div class="pipeline-bar" id="pipelineBar"></div>
-  <!-- Smart Suggestions bar -->
-  <div class="suggest-bar" id="suggestBar"></div>
-  <!-- v11: Expression Intelligence Layer type badge -->
-  <div class="eil-type-row" id="eilTypeRow"></div>
-</div>
+```html
+<!-- Add Student Mode toggle button to the top strip of the UI -->
+<div class="top-strip">
+  <!-- ... existing code ... -->
+  <button class="mode-btn" id="studentModeBtn" title="Toggle Student Mode">📚</button>
 </div>
 
-<!-- ════════════════ SOLVE TAB ════════════════ -->
-<div class="tab-panel" id="tab-solve">
-<div class="adv-panel">
+<!-- Add JavaScript code to handle Student Mode toggle -->
+<script>
+  const studentModeBtn = document.getElementById('studentModeBtn');
+  let isStudentMode = false;
 
-  <!-- Symbolic Calculus — v12: definite integral + trig identity checker -->
-  <div class="adv-section">
-    <div class="adv-title">SYMBOLIC CALCULUS <span style="font-size:8px;color:#4fc3f7;font-weight:400;">(v12)</span></div>
-    <input class="adv-input" id="calcInput" placeholder="e.g.  x^2 + 3*x + 1" autocomplete="off" spellcheck="false">
-    <div class="adv-btn-row">
-      <button class="adv-btn primary" onclick="doDerivative()">d/dx</button>
-      <button class="adv-btn primary" onclick="doIntegralPrompt()">∫ dx</button>
-      <button class="adv-btn" onclick="doSimplify()">Simplify</button>
-      <button class="adv-btn" onclick="doTrigCheck()">Trig ID</button>
-    </div>
-    <div id="integralBoundsRow" style="display:none;margin-top:6px;">
+  studentModeBtn.addEventListener('click', () => {
+    isStudentMode = !isStudentMode;
+    if (isStudentMode) {
+      // Hide TEST tab, PROG tab, pipeline monitor, and EIL badge
+      document.getElementById('testTab').style.display = 'none';
+      document.getElementById('progTab').style.display = 'none';
+      document.getElementById('pipelineMonitor').style.display = 'none';
+      document.getElementById('eilHealth').style.display = 'none';
+    } else {
+      // Show TEST tab, PROG tab, pipeline monitor, and EIL badge
+      document.getElementById('testTab').style.display = 'block';
+      document.getElementById('progTab').style.display = 'block';
+      document.getElementById('pipelineMonitor').style.display = 'block';
+      document.getElementById('eilHealth').style.display = 'block';
+    }
+  });
+</script>
+```    <div id="integralBoundsRow" style="display:none;margin-top:6px;">
       <div style="font-size:9px;color:var(--shift-color);margin-bottom:4px;letter-spacing:0.5px;">DEFINITE INTEGRAL BOUNDS</div>
       <div style="display:flex;gap:6px;align-items:center;">
         <input class="adv-input" id="integralLo" placeholder="a" style="margin-bottom:0;flex:1;" type="number" value="0">

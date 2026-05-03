@@ -41,6 +41,33 @@ def get_chunk(lines, keyword=None, chunk_num=0):
     end = min(len(lines), start + CHUNK_SIZE)
     return "".join(lines[start:end]), start
 
+def build_file_map(lines):
+    markers = []
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if any([
+            stripped.startswith("function "),
+            stripped.startswith("const ") and "=" in stripped and ("function" in stripped or "=>" in stripped),
+            stripped.startswith("// ---"),
+            stripped.startswith("// ==="),
+            stripped.startswith("/* "),
+            stripped.startswith("class "),
+            stripped.startswith("// SECTION"),
+            stripped.startswith("// MODULE"),
+            stripped.startswith("let EXEC"),
+            stripped.startswith("let EIL"),
+            stripped.startswith("const EXEC"),
+            stripped.startswith("const EIL"),
+        ]):
+            markers.append(f"  L{i+1}: {stripped[:80]}")
+
+    # Reduced from 300 to 80 to save tokens
+    if len(markers) > 80:
+        step = len(markers) // 80
+        markers = markers[::step]
+
+    return "\n".join(markers)
+
 def write_calculator(content):
     with open(CALC_FILE, "w", encoding="utf-8") as f:
         f.write(content)
@@ -72,13 +99,13 @@ def browse_web(url):
         return "Could not fetch URL"
 
 def break_into_steps(task):
+    # Only send first 500 chars of task to save tokens
+    short_task = task[:500]
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{
             "role": "user",
-            "content": f"""Break this task into 3-5 small steps for editing an 18000 line HTML calculator file.
-Return ONLY a numbered list, nothing else.
-Task: {task}"""
+            "content": f"Break this into 3-5 steps for editing an HTML calculator. Numbered list only.\nTask: {short_task}"
         }]
     )
     return response.choices[0].message.content
@@ -100,15 +127,42 @@ def test_calculator():
     except Exception as e:
         return f"Test failed: {e}"
 
+def get_multiline_input():
+    """
+    Collects multi-line input.
+    Type PASTE to enter paste mode — then paste freely.
+    Type END on its own line to finish.
+    """
+    first_line = input("You: ").strip()
+
+    if first_line.upper() == "PASTE":
+        print("  [Paste mode — paste your prompt, then type END on a new line to submit]")
+        lines = []
+        while True:
+            line = input()
+            if line.strip().upper() == "END":
+                break
+            lines.append(line)
+        return "\n".join(lines)
+
+    return first_line
+
+
+# ── Startup ────────────────────────────────────────────────────────────────────
+
 calc_lines = read_calculator_full()
 total_lines = len(calc_lines)
 messages = load_memory()
 
 print(f"Autonomous Agent ready! Calculator loaded: {total_lines} lines")
-print("Commands: 'quit', 'chunk N', 'find KEYWORD', or just describe what to do")
+print("Commands: 'quit', 'chunk N', 'find KEYWORD', 'PASTE' (for big prompts), or describe what to do")
+print("  PASTE mode: type PASTE → paste your prompt → type END to submit")
+
+# ── Main loop ──────────────────────────────────────────────────────────────────
 
 while True:
-    user_input = input("You: ")
+    user_input = get_multiline_input()
+
     if user_input.lower() == "quit":
         break
 
@@ -133,7 +187,8 @@ while True:
         words = user_input.lower().split()
         keywords = ["copy", "graph", "formula", "step", "api", "button",
                    "modal", "share", "history", "theme", "css", "style",
-                   "function", "calc", "solve", "photo", "camera"]
+                   "function", "calc", "solve", "photo", "camera",
+                   "exec", "eil", "rove", "cursor", "solver", "test"]
         for word in words:
             if word in keywords:
                 calc_chunk, start_line = get_chunk(calc_lines, keyword=word)
@@ -142,24 +197,32 @@ while True:
         else:
             calc_chunk, start_line = get_chunk(calc_lines, chunk_num=0)
 
-    system_prompt = f"""You are an autonomous agent editing a {total_lines}-line calculator HTML file.
+    # Build a compact structural map
+    file_map = build_file_map(calc_lines)
 
-Current section (lines ~{start_line}-{start_line+CHUNK_SIZE}, keyword: {keyword}):
+    system_prompt = f"""You are an autonomous agent editing a {total_lines}-line HTML calculator (CalcPro).
+
+RULES (never violate):
+- All computation: EXEC.run(EILv15.build()) only
+- calcEval is disabled — never call it
+- EXEC is frozen — never modify it
+- Single HTML file only
+
+FILE MAP (key functions/sections):
+{file_map}
+
+CURRENT SECTION (lines ~{start_line}–{start_line+CHUNK_SIZE}, keyword: {keyword}):
 {calc_chunk}
 
-When modifying code:
-- Start response with WRITE_CHUNK: then write the modified section only
-- Keep the same number of lines roughly
-- Do not rewrite the whole file unless asked
-
-When browsing: start with BROWSE:url
-Otherwise respond normally."""
+TO EDIT: start response with WRITE_CHUNK: then write only the modified section
+TO GET DIFFERENT SECTION: start with NEED_SECTION: <keyword>
+DO NOT remove unrelated code. Keep line count similar unless adding features."""
 
     messages.append({"role": "user", "content": user_input})
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[{"role": "system", "content": system_prompt}] + messages[-10:]
+        messages=[{"role": "system", "content": system_prompt}] + messages[-3:]
     )
 
     reply = response.choices[0].message.content
@@ -186,6 +249,15 @@ Otherwise respond normally."""
         url = reply.replace("BROWSE:", "").strip()
         content = browse_web(url)
         reply = f"Browsed {url}:\n{content[:500]}"
+
+    elif reply.startswith("NEED_SECTION:"):
+        need = reply.replace("NEED_SECTION:", "").strip()
+        print(f"Agent needs section: '{need}' — re-running with that context...")
+        calc_chunk, start_line = get_chunk(calc_lines, keyword=need)
+        keyword = need
+        messages.pop()
+        messages.append({"role": "user", "content": user_input + f"\n[Section loaded: {need} at line {start_line}]"})
+        continue
 
     messages.append({"role": "assistant", "content": reply})
     save_memory(messages)

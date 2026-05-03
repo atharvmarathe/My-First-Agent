@@ -122,207 +122,75 @@
 
 /* ══════════ v14 NEW STYLES ══════════ */
 
-/* -- Equation solver section -- */
-.eq-solver-section { margin-bottom: 14px; }
-.eq-type-tabs { display:flex; gap:5px; margin-bottom:8px; flex-wrap:wrap; }
-.eq-type-btn { background:var(--unit-btn); border:1px solid var(--panel-border); border-radius:4px;
-  color:var(--history-text); font-family:'Rajdhani',sans-serif; font-size:10px; font-weight:700;
-  padding:5px 10px; cursor:pointer; transition:all 0.15s; letter-spacing:0.5px; }
-.eq-type-btn.active { background:var(--btn-op); border-color:var(--btn-op-sh); color:#fff; }
-.eq-inputs { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
-.eq-input-group { display:flex; align-items:center; gap:6px; }
-.eq-label { font-size:10px; color:var(--ad-text); font-family:'Rajdhani',sans-serif;
-  font-weight:700; letter-spacing:0.5px; min-width:14px; }
-.eq-field { flex:1; background:var(--display-bg); border:1px solid var(--modal-border);
-  border-radius:5px; padding:6px 10px; font-family:'Share Tech Mono',monospace; font-size:14px;
-  color:var(--display-text); outline:none; }
-.eq-field:focus { border-color:var(--btn-orange); }
-.eq-result { background:var(--history-item); border-radius:5px; padding:10px 12px; margin-top:8px;
-  border:1px solid var(--panel-border); font-family:'Share Tech Mono',monospace; font-size:13px;
-  color:var(--history-result); display:none; line-height:1.7; }
-.eq-result.show { display:block; }
-.eq-result .eq-answer { font-size:16px; color:var(--btn-orange); font-weight:700; }
-.eq-result .eq-detail { font-size:11px; color:var(--history-text); margin-top:4px; }
+```javascript
+// ... (around line 125, near the equation solver section)
+function simplifyLinearEquation(eq) {
+  // Regular expression to match simple linear equations
+  const regex = /^(-?\d*)x\s*([+-])\s*(\d+)\s*=\s*(-?\d*)x\s*([+-])\s*(\d+)$/;
+  const match = eq.match(regex);
+  
+  if (match) {
+    const a1 = match[1] ? parseInt(match[1]) : 1;
+    const b1 = match[3] ? parseInt(match[3]) : 0;
+    const op1 = match[2];
+    const a2 = match[4] ? parseInt(match[4]) : 1;
+    const b2 = match[6] ? parseInt(match[6]) : 0;
+    const op2 = match[5];
+    
+    let steps = [];
+    let x = 'x';
+    
+    // Move all terms to one side
+    let equation = `${a1}x${op1}${b1}=${a2}x${op2}${b2}`;
+    let step = `Step 1: Rearrange the equation → ${equation}`;
+    steps.push(step);
+    
+    if (op1 === '+') {
+      equation = `${a1}x=${a2}x${op2 === '+' ? '-' : '+'}${b2 - b1}`;
+    } else {
+      equation = `${a1}x=${a2}x${op2 === '-' ? '+' : '-'}${b1 - b2}`;
+    }
+    step = `Step 2: Combine like terms → ${equation}`;
+    steps.push(step);
+    
+    // Isolate x
+    let result = '';
+    if (a1 === a2) {
+      if (op1 === '+') {
+        result = `${b2 - b1} = 0`;
+      } else {
+        result = `${b1 - b2} = 0`;
+      }
+    } else {
+      let divisor = a1 - a2;
+      if (divisor !== 0) {
+        if (op1 === '+') {
+          result = `x = ${-b1 + b2} / ${divisor}`;
+        } else {
+          result = `x = ${b1 - b2} / ${divisor}`;
+        }
+      } else {
+        result = 'No solution';
+      }
+    }
+    step = `Step 3: Solve for x → ${result}`;
+    steps.push(step);
+    
+    renderSteps(steps, result);
+  } else {
+    // Fallback to AI API
+    EXEC.run(EILv15.build());
+  }
+}
 
-/* -- Workspace system -- */
-.ws-bar { display:flex; gap:5px; padding:0 9px 6px; overflow-x:auto; align-items:center; }
-.ws-tab-btn { background:var(--btn-fn); border:1px solid var(--panel-border); border-radius:4px;
-  color:var(--history-text); font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:700;
-  padding:4px 10px; cursor:pointer; white-space:nowrap; transition:all 0.15s; letter-spacing:0.5px; }
-.ws-tab-btn.active { background:var(--btn-op); border-color:var(--btn-op-sh); color:#fff; }
-.ws-tab-btn.ws-add { color:var(--shift-color); border-style:dashed; }
-.ws-tab-btn.ws-add:hover { background:rgba(232,98,26,0.1); }
-
-/* -- EIL contract badge (health indicator) -- */
-.eil-health { font-size:8px; font-weight:700; letter-spacing:1px; padding:2px 6px;
-  border-radius:3px; font-family:'Rajdhani',sans-serif; }
-.eil-health.ok { color:#80ff80; background:rgba(128,255,128,0.1); border:1px solid rgba(128,255,128,0.3); }
-.eil-health.warn { color:#ffcc00; background:rgba(255,204,0,0.1); border:1px solid rgba(255,204,0,0.3); }
-
-/* -- Safe math error display -- */
-.safe-err { color:#ff8888; font-size:11px; font-family:'Rajdhani',sans-serif; font-weight:700;
-  letter-spacing:0.5px; }
-
-/* -- Offline AI fallback badge -- */
-.ai-mode-badge { font-size:8px; padding:1px 5px; border-radius:3px; font-weight:700;
-  letter-spacing:0.5px; margin-left:5px; }
-.ai-mode-badge.live { background:rgba(128,224,160,0.15); color:#80e0a0;
-  border:1px solid rgba(128,224,160,0.3); }
-.ai-mode-badge.offline { background:rgba(255,200,0,0.15); color:#ffc800;
-  border:1px solid rgba(255,200,0,0.3); }
-
-/* -- v14 history type pill -- */
-.hist-type-pill { font-size:7px; font-weight:700; letter-spacing:0.5px; padding:1px 5px;
-  border-radius:8px; margin-left:5px; vertical-align:middle; }
-.hist-type-pill.quadratic { background:rgba(79,195,247,0.2); color:#4fc3f7; }
-.hist-type-pill.trig { background:rgba(255,245,157,0.2); color:#fff176; }
-.hist-type-pill.numeric { background:rgba(80,193,120,0.2); color:#80e0a0; }
-.hist-type-pill.cubic,.hist-type-pill.polynomial { background:rgba(206,147,216,0.2); color:#ce93d8; }
-.hist-type-pill.logarithmic,.hist-type-pill.radical,.hist-type-pill.algebraic { background:rgba(248,187,208,0.2); color:#f48fb1; }
-
-/* -- v14 streaming improvements -- */
-.stream-cursor { display:inline-block; width:2px; height:11px; background:var(--btn-orange);
-  animation:blink 0.8s step-end infinite; vertical-align:text-bottom; margin-left:1px; }
-
-/* ── v18: Spreadsheet Table ── */
-#spreadsheetTable th{background:var(--calc-top);color:rgba(255,255,255,0.7);font-size:9px;font-family:'Rajdhani',sans-serif;font-weight:700;padding:4px 5px;text-align:center;position:sticky;top:0;z-index:1;border:1px solid var(--panel-border);}
-#spreadsheetTable td{padding:0;border:1px solid var(--panel-border);}
-.ss-cell{width:62px;background:transparent;border:none;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--history-result);padding:3px 4px;outline:none;text-align:right;width:100%;box-sizing:border-box;}
-.ss-cell:focus{background:rgba(232,98,26,0.15);color:#fff;}
-.ss-cell.formula{color:var(--shift-color);}
-.ss-cell.error{color:#ff6060;}
-.ss-row-head{background:var(--calc-top);color:rgba(255,255,255,0.5);font-size:9px;font-family:'Rajdhani',sans-serif;font-weight:700;padding:3px 5px;text-align:center;min-width:22px;}
-
-/* ── v18: Periodic Table ── */
-.pt-el{border-radius:3px;padding:2px 1px;cursor:pointer;text-align:center;border:1px solid transparent;transition:all 0.12s;font-family:'Rajdhani',sans-serif;}
-.pt-el:hover{border-color:var(--btn-orange);transform:scale(1.15);z-index:2;position:relative;}
-.pt-el .pt-sym{font-size:9px;font-weight:700;line-height:1.1;}
-.pt-el .pt-num{font-size:7px;opacity:0.7;line-height:1;}
-.pt-el.metal{background:rgba(30,90,160,0.35);color:#90c8ff;}
-.pt-el.nonmetal{background:rgba(40,140,60,0.35);color:#90e0a0;}
-.pt-el.noble{background:rgba(140,40,160,0.35);color:#d090ff;}
-.pt-el.metalloid{background:rgba(160,100,20,0.35);color:#f0c060;}
-.pt-el.alkali{background:rgba(180,50,50,0.35);color:#ffb0a0;}
-.pt-el.alkaline{background:rgba(180,120,0,0.35);color:#ffe090;}
-.pt-el.transition{background:rgba(20,100,140,0.35);color:#80d0f0;}
-.pt-el.lanthanide{background:rgba(80,80,0,0.35);color:#e8e880;}
-.pt-el.actinide{background:rgba(100,20,80,0.35);color:#f080d0;}
-.pt-el.hidden{display:none;}
-.pt-filter{background:var(--unit-btn);border:1px solid var(--panel-border);border-radius:4px;color:var(--history-text);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 8px;cursor:pointer;}
-.pt-filter.active{background:var(--btn-orange);border-color:var(--btn-orange-sh);color:#fff;}
-
-/* ── v18: Constants ── */
-.const-item{background:var(--formula-item);border:1px solid var(--panel-border);border-radius:4px;padding:7px 9px;cursor:pointer;transition:all 0.12s;}
-.const-item:hover{border-color:var(--btn-orange);}
-.const-name{font-size:9px;color:var(--shift-color);font-weight:700;letter-spacing:0.5px;}
-.const-val{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--history-result);}
-.const-unit{font-size:8px;color:var(--ad-text);}
-
-/* ── v18: 3D Canvas ── */
-#graph3dCanvas{cursor:grab;}
-#graph3dCanvas:active{cursor:grabbing;}
-
-.pipeline-bar { display:flex; gap:3px; align-items:center; padding:3px 9px 0;
-  font-size:8px; font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:0.5px;
-  color:var(--ad-text); min-height:16px; }
-.pipeline-stage { padding:1px 5px; border-radius:3px; border:1px solid transparent; transition:all 0.2s; }
-.pipeline-stage.active { color:#4fc3f7; border-color:rgba(79,195,247,0.4); background:rgba(79,195,247,0.08); }
-.pipeline-stage.done { color:#80e0a0; border-color:rgba(128,224,160,0.3); }
-.pipeline-sep { color:var(--panel-border); }
-
-/* ── v19: Complex Mode Toggle ── */
-.complex-mode-row{display:flex;align-items:center;gap:8px;padding:4px 9px 5px;background:rgba(0,0,0,0.1);border-bottom:1px solid var(--panel-border);}
-.complex-toggle-label{font-size:9px;font-weight:700;color:var(--ad-text);letter-spacing:1px;font-family:'Rajdhani',sans-serif;}
-.complex-mode-switch{position:relative;display:inline-block;width:32px;height:17px;}
-.complex-mode-switch input{opacity:0;width:0;height:0;}
-.complex-mode-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--btn-fn);border-radius:17px;border:1px solid var(--panel-border);transition:all 0.2s;}
-.complex-mode-slider:before{position:absolute;content:'';height:11px;width:11px;left:2px;bottom:2px;background:var(--ad-text);border-radius:50%;transition:all 0.2s;}
-input:checked + .complex-mode-slider{background:rgba(100,50,200,0.4);border-color:#a060ff;}
-input:checked + .complex-mode-slider:before{transform:translateX(15px);background:#c080ff;}
-#complexModeBar{display:none;padding:3px 9px 4px;background:rgba(160,80,255,0.08);border-bottom:1px solid rgba(160,80,255,0.25);}
-#complexModeBar.show{display:flex;align-items:center;gap:6px;}
-.complex-bar-label{font-size:8px;font-weight:700;color:#c080ff;letter-spacing:1px;font-family:'Rajdhani',sans-serif;}
-.complex-bar-val{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--history-result);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-
-/* ── v19: Implicit graph hint ── */
-#implicitHint{display:none;font-size:9px;color:#b080ff;margin-bottom:4px;padding:4px 8px;background:rgba(100,50,200,0.1);border:1px solid rgba(160,100,255,0.3);border-radius:4px;}
-
-/* ── v19: Limit Calculator ── */
-.limit-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap;}
-.limit-label{font-size:9px;font-weight:700;color:var(--ad-text);font-family:'Rajdhani',sans-serif;min-width:60px;letter-spacing:0.5px;}
-.limit-input{flex:1;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:5px;padding:6px 10px;font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--display-text);outline:none;min-width:60px;}
-.limit-input:focus{border-color:var(--btn-orange);}
-.limit-side-row{display:flex;gap:5px;margin-bottom:8px;}
-.limit-side-btn{background:var(--unit-btn);border:1px solid var(--panel-border);border-radius:4px;color:var(--history-text);font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;padding:5px 10px;cursor:pointer;transition:all 0.15s;}
-.limit-side-btn.active{background:var(--btn-op);border-color:var(--btn-op-sh);color:#fff;}
-
-/* ── v19: Polynomial Inequality Solver ── */
-.ineq-number-line{width:100%;height:38px;background:var(--history-item);border-radius:4px;border:1px solid var(--panel-border);display:block;margin-top:8px;}
-
-/* ── v19: Graph visual markers legend ── */
-.graph-markers-legend{display:flex;gap:10px;flex-wrap:wrap;font-size:9px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.5px;margin-top:4px;padding:4px 0;}
-.marker-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px;vertical-align:middle;}
-.marker-dot.root{background:#ff4444;}
-.marker-dot.minpt{background:#44ff88;}
-.marker-dot.maxpt{background:#44aaff;}
-.marker-dot.tangent{background:#ffcc00;}
-
-/* ── v19: Triangle Solver ── */
-.tri-inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:8px;}
-.tri-input-group{display:flex;flex-direction:column;gap:3px;}
-.tri-label{font-size:9px;font-weight:700;color:var(--shift-color);letter-spacing:0.5px;font-family:'Rajdhani',sans-serif;text-align:center;}
-.tri-field{background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:5px 6px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--display-text);outline:none;text-align:center;width:100%;}
-.tri-field:focus{border-color:var(--btn-orange);}
-
-/* ── v19: Paste/Expression cleaner ── */
-.paste-clean-area{width:100%;background:var(--history-bg);border:1px solid var(--panel-border);border-radius:5px;padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--history-result);outline:none;resize:vertical;min-height:56px;line-height:1.5;}
-.paste-clean-area:focus{border-color:var(--btn-orange);}
-
-/* ── v19: User-defined functions ── */
-.udf-row{display:flex;gap:5px;align-items:center;margin-bottom:6px;}
-.udf-name{font-size:10px;font-weight:700;color:var(--shift-color);font-family:'Share Tech Mono',monospace;min-width:36px;}
-.udf-field{flex:1;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:5px 8px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--display-text);outline:none;}
-.udf-field:focus{border-color:var(--btn-orange);}
-
-</style>
-</head>
-<body>
-
-<!-- ════════════════ TAB BAR ════════════════ -->
-<div class="tab-bar" id="tabBar">
-  <button class="tab active" data-tab="calc">CALC</button>
-  <button class="tab" data-tab="solve">SOLVE</button>
-  <button class="tab" data-tab="stats">STAT</button>
-  <button class="tab" data-tab="basen">BASE</button>
-  <button class="tab" data-tab="units">UNITS</button>
-  <button class="tab" data-tab="formula">FX</button>
-  <button class="tab" data-tab="graph">GRAPH</button>
-  <button class="tab" data-tab="table">TABLE</button>
-  <button class="tab" data-tab="science">SCI</button>
-  <button class="tab" data-tab="prog">PROG</button>
-  <button class="tab" data-tab="test">TEST</button>
-</div>
-
-
-<!-- ════════════════ WORKSPACE BAR (v14) ════════════════ -->
-<div class="ws-bar" id="wsBar">
-  <button class="ws-tab-btn active" data-ws="0" onclick="switchWorkspace(0,this)">WS 1</button>
-  <button class="ws-tab-btn" data-ws="1" onclick="switchWorkspace(1,this)">WS 2</button>
-  <button class="ws-tab-btn" data-ws="2" onclick="switchWorkspace(2,this)">WS 3</button>
-  <button class="ws-tab-btn ws-add" onclick="saveWorkspaceSnapshot()" title="Save current state to this workspace">💾 SAVE</button>
-</div>
-
-<!-- ════════════════ CALC TAB (v8 preserved + extended) ════════════════ -->
-<div class="tab-panel active" id="tab-calc">
-<div class="calculator" id="calc">
-  <div class="top-strip">
-    <div><div class="brand">CalcPro <span class="version-badge">v34</span></div><div class="brand-sub">MATH OS — v34</div></div>
-    <div class="top-controls">
-      <div class="indicators">
-        <span class="ind" id="iShift">SHIFT</span>
-        <span class="ind rad" id="iRad">RAD</span>
-        <span class="ind grad" id="iGrad">GRAD</span>
-        <span class="ind mem" id="iMem">M</span>
+// Call the simplifyLinearEquation function when the solve button is clicked
+// (around line 4662, near the selectEqType function)
+function selectEqType(type, btn) {
+  // ... (other code)
+  simplifyLinearEquation(document.getElementById('eq-input').value);
+}
+```
+Note: The above code assumes that the equation is in the format `ax + b = cx + d`, where `a`, `b`, `c`, and `d` are integers. The code uses regular expressions to match the equation and then applies simple algebraic manipulations to solve for `x`. The steps are then displayed in the existing steps output area. If the equation is not in the expected format, the code falls back to calling the AI API.        <span class="ind mem" id="iMem">M</span>
         <span class="eil-health ok" id="eilHealth" title="EIL Contract Health">EIL✓</span>
       </div>
       <button class="theme-btn" id="themeBtn" title="Toggle theme">☀</button>

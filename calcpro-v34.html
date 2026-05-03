@@ -1,204 +1,57 @@
 ```html
-<div class="tab-panel active">
-    <!-- existing SOLVE tab content -->
-    <!-- ... -->
-    <div class="adv-section">
-        <div class="adv-title">FOLLOW MY STEPS</div>
-        <div style="color:var(--text-muted);font-size:0.85em;margin-bottom:8px">Enter a problem and your attempt — AI finds your mistake</div>
-        <textarea class="adv-input" id="fms-problem" placeholder="Enter the problem e.g. 2x + 6 = 0" rows="2"></textarea>
-        <textarea class="adv-input" id="fms-attempt" placeholder="Enter your working/attempt" rows="3"></textarea>
-        <div class="adv-btn-row">
-            <button class="adv-btn primary" id="fms-btn">CHECK MY STEPS</button>
-        </div>
-        <div id="fms-result" style="margin-top:10px;padding:10px;background:var(--card-bg);border-radius:8px;display:none"></div>
-    </div>
+<!-- existing expression display input area in the CALC tab -->
+<div id="expression-display" 
+     ontouchstart="handleTouchStart(event)" 
+     ontouchmove="handleTouchMove(event)" 
+     ontouchend="handleTouchEnd(event)">
+  <!-- existing content -->
 </div>
 
-<!-- ... rest of the HTML code ... -->
-
 <script>
-    // ... existing JavaScript code ...
-    // ... 
-    document.getElementById('fms-btn').addEventListener('click',function(){
-        var p=document.getElementById('fms-problem').value.trim();
-        var a=document.getElementById('fms-attempt').value.trim();
-        if(!p||!a){alert('Please enter both the problem and your attempt');return;}
-        var r=document.getElementById('fms-result');
-        r.style.display='block';
-        r.innerHTML='Checking your steps...';
-        generateSteps('Problem: '+p+'\nStudent attempt: '+a+'\nIdentify exactly which step is wrong and why. Be specific.',function(result){
-            r.innerHTML=result;
-        });
-    });
-    // ... rest of the JavaScript code ...
+  // ... existing JavaScript code ...
+
+  function handleTouchStart(event) {
+    event.preventDefault();
+    var touch = event.touches[0];
+    var cursorPosition = getCursorPosition(touch.clientX, touch.clientY);
+    // move cursor to the calculated position
+    document.getElementById('expression-input').setSelectionRange(cursorPosition, cursorPosition);
+  }
+
+  function handleTouchMove(event) {
+    event.preventDefault();
+    var touch = event.touches[0];
+    var cursorPosition = getCursorPosition(touch.clientX, touch.clientY);
+    // update cursor position on move
+    document.getElementById('expression-input').setSelectionRange(cursorPosition, cursorPosition);
+  }
+
+  function handleTouchEnd(event) {
+    event.preventDefault();
+  }
+
+  function getCursorPosition(clientX, clientY) {
+    var rect = document.getElementById('expression-display').getBoundingClientRect();
+    var x = clientX - rect.left;
+    var y = clientY - rect.top;
+    // calculate cursor position based on x and y coordinates
+    // this may involve calculating the character index based on the x coordinate
+    // and the font size and spacing of the expression display
+    var cursorPosition = calculateCursorPosition(x, y);
+    return cursorPosition;
+  }
+
+  function calculateCursorPosition(x, y) {
+    // this function should calculate the cursor position based on the x and y coordinates
+    // it may involve calculating the character index based on the x coordinate
+    // and the font size and spacing of the expression display
+    // for simplicity, assume a fixed-width font and a single line of text
+    var characterWidth = 10; // assume a fixed character width
+    var cursorPosition = Math.floor(x / characterWidth);
+    return cursorPosition;
+  }
 </script>
-```.table-row:nth-child(even){background:rgba(255,255,255,0.03);}
-.table-x{color:var(--shift-color);}
-.table-y{color:var(--history-result);}
-
-/* ── Modal system (preserved from v8 + extended) ── */
-.input-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;z-index:1000;}
-.input-modal.open{display:flex;}
-.modal-box{background:var(--modal-bg);border:1px solid var(--modal-border);border-radius:12px;padding:20px;width:300px;box-shadow:0 16px 48px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto;}
-.modal-title{font-size:14px;font-weight:700;color:var(--history-text);margin-bottom:12px;letter-spacing:1px;}
-.modal-input{width:100%;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:6px;padding:8px 12px;font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--display-text);outline:none;margin-bottom:14px;}
-.modal-input:focus{border-color:var(--btn-orange);}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
-.modal-ok{background:var(--btn-orange);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
-.modal-cancel{background:none;color:var(--ad-text);border:1px solid var(--modal-border);border-radius:6px;padding:8px 14px;font-family:'Rajdhani',sans-serif;font-size:14px;cursor:pointer;}
-
-/* ── Step solver overlay ── */
-.step-box{background:var(--history-item);border-radius:5px;padding:10px 12px;margin-top:8px;border:1px dashed var(--btn-orange);font-size:11px;color:var(--history-text);line-height:1.6;display:none;}
-.step-box.show{display:block;}
-.step-label{font-size:9px;color:var(--btn-orange);font-weight:700;letter-spacing:1px;margin-bottom:6px;}
-
-/* ── Version badge ── */
-.version-badge{background:linear-gradient(135deg,var(--btn-orange),#c04a08);color:#fff;font-size:8px;font-weight:700;letter-spacing:1px;padding:2px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;}
-
-/* ── Loading spinner for Math.js ops ── */
-.math-loading{display:none;font-size:10px;color:var(--shift-color);animation:pulse 1s ease-in-out infinite;margin-top:6px;letter-spacing:1px;}
-.math-loading.show{display:block;}
-@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
-
-/* ── OCR / QR placeholder buttons ── */
-.placeholder-row{display:flex;gap:6px;margin-top:10px;}
-.placeholder-btn{flex:1;background:var(--btn-fn);border:1px dashed var(--panel-border);border-radius:5px;color:var(--ad-text);font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;padding:8px 4px;cursor:pointer;text-align:center;letter-spacing:0.5px;transition:all 0.15s;}
-.placeholder-btn:hover{border-color:var(--btn-orange);color:var(--history-text);}
-
-/* ── Smart Suggestions ── */
-.suggest-bar{display:flex;gap:5px;padding:4px 9px 0;flex-wrap:wrap;min-height:26px;}
-.suggest-chip{background:var(--btn-fn);border:1px solid var(--panel-border);border-radius:12px;color:var(--shift-color);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:3px 9px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px;white-space:nowrap;}
-.suggest-chip:hover{background:var(--btn-op);border-color:var(--btn-orange);color:#fff;}
-/* ── Prog tab ── */
-#progInput:focus{border-color:var(--btn-orange);}
-/* scrollbar styling */
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--panel-border);border-radius:2px;}
-
-/* ── v11: Expression Type Badge ── */
-.eil-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(232,98,26,0.15);border:1px solid rgba(232,98,26,0.4);border-radius:10px;padding:2px 8px;font-size:9px;font-weight:700;color:var(--shift-color);letter-spacing:0.5px;margin-bottom:4px;transition:all 0.2s;}
-.eil-badge.numeric{background:rgba(80,193,120,0.12);border-color:rgba(80,193,120,0.4);color:#80e0a0;}
-.eil-badge.quadratic{background:rgba(79,195,247,0.12);border-color:rgba(79,195,247,0.4);color:#4fc3f7;}
-.eil-badge.cubic{background:rgba(206,147,216,0.12);border-color:rgba(206,147,216,0.4);color:#ce93d8;}
-.eil-badge.trig{background:rgba(255,245,157,0.12);border-color:rgba(255,245,157,0.4);color:#fff176;}
-.eil-badge.multivariable{background:rgba(248,187,208,0.12);border-color:rgba(248,187,208,0.4);color:#f48fb1;}
-.eil-badge.matrix{background:rgba(129,212,250,0.12);border-color:rgba(129,212,250,0.4);color:#81d4fa;}
-.eil-badge.complex{background:rgba(161,196,253,0.12);border-color:rgba(161,196,253,0.4);color:#a1c4fd;}
-.eil-type-row{padding:0 9px 3px;min-height:18px;}
-
-/* ── v11: Structured Step Renderer ── */
-.step-structured{display:flex;flex-direction:column;gap:6px;}
-.step-item{background:rgba(255,255,255,0.04);border-left:3px solid var(--panel-border);border-radius:0 4px 4px 0;padding:6px 8px;transition:border-color 0.2s;}
-.step-item.type-expand{border-left-color:#4fc3f7;}
-.step-item.type-simplify{border-left-color:#a5d6a7;}
-.step-item.type-substitute{border-left-color:#f48fb1;}
-.step-item.type-solve{border-left-color:#ce93d8;}
-.step-item.type-result{border-left-color:#e8621a;background:rgba(232,98,26,0.08);}
-.step-item.type-info{border-left-color:var(--shift-color);}
-.step-num{font-size:8px;color:var(--ad-text);font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:1px;margin-bottom:2px;}
-.step-expr{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--history-result);}
-.step-desc{font-size:10px;color:var(--history-text);margin-top:1px;}
-.step-answer{font-size:15px;color:#e8621a;font-family:'Share Tech Mono',monospace;font-weight:700;margin-top:4px;}
-
-/* ── v11: Graph Root/Vertex markers ── */
-.graph-info-bar{font-size:10px;color:var(--history-text);background:var(--history-item);border-radius:4px;padding:5px 8px;margin-top:6px;font-family:'Share Tech Mono',monospace;min-height:24px;border:1px solid var(--panel-border);display:none;}
-.graph-info-bar.show{display:block;}
-
-/* ── v11: Plugin slot indicator ── */
-.plugin-pill{background:rgba(255,255,255,0.04);border:1px dashed var(--panel-border);border-radius:5px;font-size:9px;color:var(--ad-text);padding:4px 8px;text-align:center;letter-spacing:0.5px;cursor:default;}
-
-/* ── v11: Replay steps animation ── */
-@keyframes stepIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
-.step-item{animation:stepIn 0.18s ease both;}
-
-/* ══════════ v17 NEW STYLES ══════════ */
-.nd-frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;font-size:0.85em;}
-.nd-num{border-bottom:1.5px solid var(--display-text);padding:0 3px;line-height:1.2;text-align:center;}
-.nd-den{padding:0 3px;line-height:1.2;text-align:center;}
-.nd-sqrt{display:inline;border-top:1.5px solid var(--display-text);padding:0 2px 0 4px;position:relative;margin-left:8px;}
-.nd-sqrt::before{content:'√';position:absolute;left:-8px;top:-1px;}
-.nd-sup{font-size:0.65em;vertical-align:super;line-height:0;}
-.nd-wrap{display:inline-flex;align-items:center;flex-wrap:wrap;gap:1px;}
-.sd-btn{background:var(--btn-fn);border:1px solid var(--btn-orange);border-radius:4px;color:var(--btn-orange);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:2px 6px;cursor:pointer;letter-spacing:0.5px;transition:all 0.15s;flex-shrink:0;}
-.sd-btn:hover{background:var(--btn-orange);color:#fff;}
-.sd-btn-row{display:flex;justify-content:flex-end;padding:0 10px 3px;gap:5px;min-height:18px;align-items:center;}
-.fmt-bar{display:flex;gap:4px;padding:2px 9px 3px;flex-wrap:wrap;}
-.fmt-btn{background:var(--btn-fn);border:1px solid var(--panel-border);border-radius:3px;color:var(--ad-text);font-family:'Rajdhani',sans-serif;font-size:8px;font-weight:700;padding:2px 6px;cursor:pointer;letter-spacing:0.5px;transition:all 0.15s;}
-.fmt-btn.active{background:var(--btn-op);border-color:var(--btn-op-sh);color:#fff;}
-.fmt-btn:hover:not(.active){color:var(--history-text);border-color:var(--btn-orange);}
-/* ── v22: Output Format Bar ── */
-.outfmt-bar{display:flex;gap:4px;padding:2px 9px 4px;align-items:center;}
-.outfmt-label{font-size:8px;font-weight:700;color:var(--ad-text);letter-spacing:1px;margin-right:3px;flex-shrink:0;}
-.outfmt-btn{background:var(--btn-fn);border:1px solid var(--panel-border);border-radius:3px;color:var(--ad-text);font-family:'Rajdhani',sans-serif;font-size:8px;font-weight:700;padding:2px 6px;cursor:pointer;letter-spacing:0.5px;transition:all 0.15s;flex-shrink:0;}
-.outfmt-btn.active{background:rgba(232,98,26,0.3);border-color:var(--btn-orange);color:var(--btn-orange);}
-.outfmt-btn:hover:not(.active){color:var(--history-text);border-color:var(--shift-color);}
-/* ── v22: GRAD indicator ── */
-.ind.grad.on{color:#a0ff80;}
-.mode-btn{background:none;border:1px solid rgba(255,255,255,0.25);border-radius:50%;width:26px;height:26px;color:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
-.mode-btn:hover{background:rgba(255,255,255,0.1);}
-.mode-btn.student{border-color:rgba(79,195,247,0.6);color:#4fc3f7;}
-.student-hidden{display:none!important;}
-.prob-dist-sel{width:100%;background:var(--btn-fn);border:1px solid var(--panel-border);border-radius:5px;color:var(--btn-text);font-family:'Rajdhani',sans-serif;font-size:12px;padding:6px 8px;margin-bottom:8px;outline:none;}
-.prob-dist-sel:focus{border-color:var(--btn-orange);}
-.prob-param-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;}
-.prob-param-grid.three{grid-template-columns:1fr 1fr 1fr;}
-.prob-label{font-size:9px;color:var(--ad-text);font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:0.5px;margin-bottom:2px;}
-.prob-input{width:100%;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:5px 8px;font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--display-text);outline:none;}
-.prob-input:focus{border-color:var(--btn-orange);}
-.vec-input-row{display:flex;gap:5px;align-items:center;margin-bottom:6px;}
-.vec-bracket{font-size:20px;color:var(--shift-color);font-weight:300;line-height:1;}
-.vec-field{flex:1;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:5px 6px;font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--display-text);text-align:center;outline:none;}
-.vec-field:focus{border-color:var(--btn-orange);}
-.vec-label{font-size:10px;font-weight:700;color:var(--shift-color);letter-spacing:0.5px;margin-bottom:4px;}
-.vec-dim-toggle{display:flex;gap:5px;margin-bottom:8px;}
-.vec-dim-btn{background:var(--unit-btn);border:1px solid var(--panel-border);border-radius:4px;color:var(--history-text);font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;padding:4px 12px;cursor:pointer;transition:all 0.15s;}
-.vec-dim-btn.active{background:var(--btn-op);border-color:var(--btn-op-sh);color:#fff;}
-.coord-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.coord-result{background:var(--history-item);border:1px solid var(--panel-border);border-radius:4px;padding:5px 8px;font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--unit-result);text-align:center;min-height:30px;display:flex;align-items:center;justify-content:center;}
-.graph-type-row{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap;}
-.graph-type-btn{background:var(--unit-btn);border:1px solid var(--panel-border);border-radius:4px;color:var(--history-text);font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:700;padding:4px 8px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px;}
-.graph-type-btn.active{background:var(--btn-orange);border-color:var(--btn-orange-sh);color:#fff;}
-.graph-param-row{display:none;gap:5px;margin-bottom:6px;}
-.graph-param-row.show{display:flex;}
-.graph-param-input{flex:1;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:5px 8px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--display-text);outline:none;}
-.graph-param-input:focus{border-color:var(--btn-orange);}
-.trace-indicator{font-size:9px;color:var(--shift-color);padding:2px 9px 0;min-height:14px;font-family:'Share Tech Mono',monospace;letter-spacing:0.5px;}
-.dms-row{display:flex;gap:4px;align-items:center;margin-bottom:6px;}
-.dms-field{flex:1;background:var(--display-bg);border:1px solid var(--modal-border);border-radius:4px;padding:5px 8px;font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--display-text);text-align:center;outline:none;}
-.dms-field:focus{border-color:var(--btn-orange);}
-.dms-lbl{font-size:11px;color:var(--shift-color);font-weight:700;flex-shrink:0;}
-
-
-
-/* ══════════ v15.1 STRESS TEST STYLES ══════════ */
-.test-group-tabs { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px; }
-.tg-btn { background:var(--unit-btn); border:1px solid var(--panel-border); border-radius:4px;
-  color:var(--history-text); font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:700;
-  padding:4px 8px; cursor:pointer; transition:all 0.15s; letter-spacing:0.5px; }
-.tg-btn.active { background:var(--btn-op); border-color:var(--btn-op-sh); color:#fff; }
-.consistency-report { background:var(--history-item); border-radius:5px; padding:10px 12px;
-  margin-top:8px; border:1px solid var(--panel-border); font-family:'Share Tech Mono',monospace;
-  font-size:11px; display:none; }
-.consistency-report.show { display:block; }
-.cr-row { display:flex; gap:8px; align-items:center; margin-bottom:4px; }
-.cr-input { color:var(--shift-color); flex:1; }
-.cr-legacy { color:#80e0a0; }
-.cr-mathjs { color:#4fc3f7; }
-.cr-match { color:#80e0a0; font-weight:700; }
-.cr-mismatch { color:#ff8888; font-weight:700; }
-.ai-isolation-block { background:rgba(128,224,160,0.06); border:1px solid rgba(128,224,160,0.25);
-  border-radius:5px; padding:8px 10px; margin-top:8px; font-size:10px; color:var(--history-text); }
-.ai-isolation-block .ai-label { color:#80e0a0; font-size:9px; font-weight:700; letter-spacing:1px; margin-bottom:4px; }
-
-/* ══════════ v15 STABLE PIPELINE STYLES ══════════ */
-
-/* -- Pipeline health monitor -- */
-.pipeline-monitor {
-  display:flex; gap:4px; align-items:center; padding:4px 9px 2px;
-  font-size:8px; font-family:'Rajdhani',sans-serif; font-weight:700;
-  letter-spacing:0.5px; background:rgba(0,0,0,0.15); border-bottom:1px solid var(--panel-border);
-  min-height:20px; overflow:hidden;
+```  min-height:20px; overflow:hidden;
 }
 .pm-stage {
   display:flex; align-items:center; gap:3px; padding:1px 6px;
